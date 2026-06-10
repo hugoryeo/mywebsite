@@ -63,6 +63,18 @@
     width: 100%;
   }
   input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+  .checkbox-wrap {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    cursor: pointer;
+  }
+  .checkbox-wrap input { width: auto; accent-color: var(--accent); transform: scale(1.2); cursor: pointer; }
+  .batt-good { color: var(--green); font-weight: 600; }
+  .batt-mid { color: var(--yellow); font-weight: 600; }
+  .batt-low { color: var(--red); font-weight: 600; }
 
   button {
     background: var(--accent);
@@ -209,8 +221,29 @@
         <input id="addCost" type="number" min="0" step="0.01" placeholder="0.00">
       </div>
       <div class="field">
+        <label for="addCondition">Condition</label>
+        <select id="addCondition">
+          <option>Excellent</option>
+          <option>Great</option>
+          <option selected>Good</option>
+          <option>Ok</option>
+          <option>Poor</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="addBattery">Battery Health (%)</label>
+        <input id="addBattery" type="number" min="0" max="100" step="1" placeholder="e.g. 87">
+      </div>
+      <div class="field">
+        <label for="addCharger">Charger</label>
+        <div class="checkbox-wrap" onclick="if(event.target.tagName!=='INPUT')document.getElementById('addCharger').click()">
+          <input id="addCharger" type="checkbox">
+          <span>Included</span>
+        </div>
+      </div>
+      <div class="field">
         <label for="addNotes">Notes (optional)</label>
-        <input id="addNotes" type="text" placeholder="condition, charger, etc.">
+        <input id="addNotes" type="text" placeholder="scratches, missing keys, etc.">
       </div>
       <button class="self-end" onclick="addLaptop()">Add (auto-assigns code)</button>
     </div>
@@ -286,11 +319,23 @@ function addLaptop() {
   const model = document.getElementById('addModel').value.trim();
   const serial = document.getElementById('addSerial').value.trim();
   const cost = parseFloat(document.getElementById('addCost').value);
+  const condition = document.getElementById('addCondition').value;
+  const batteryRaw = document.getElementById('addBattery').value.trim();
+  const charger = document.getElementById('addCharger').checked;
   const notes = document.getElementById('addNotes').value.trim();
 
   if (!model) { alert('Please enter a model.'); return; }
   if (!serial) { alert('Please enter a serial number.'); return; }
   if (isNaN(cost) || cost < 0) { alert('Please enter a valid cost.'); return; }
+
+  let battery = null;
+  if (batteryRaw !== '') {
+    battery = parseInt(batteryRaw, 10);
+    if (isNaN(battery) || battery < 0 || battery > 100) {
+      alert('Battery health must be a whole number between 0 and 100.');
+      return;
+    }
+  }
 
   const dupe = laptops.find(l => l.status === 'in-stock' && l.serial.toLowerCase() === serial.toLowerCase());
   if (dupe && !confirm('A laptop in stock already has serial "' + dupe.serial + '" (code ' + dupe.code + '). Add anyway?')) return;
@@ -301,6 +346,7 @@ function addLaptop() {
   laptops.push({
     id: Date.now() + '-' + Math.random().toString(36).slice(2, 7),
     model, serial, cost, notes,
+    condition, battery, charger,
     code,
     status: 'in-stock',
     dateAdded: new Date().toISOString(),
@@ -313,6 +359,9 @@ function addLaptop() {
   document.getElementById('addModel').value = '';
   document.getElementById('addSerial').value = '';
   document.getElementById('addCost').value = '';
+  document.getElementById('addCondition').value = 'Good';
+  document.getElementById('addBattery').value = '';
+  document.getElementById('addCharger').checked = false;
   document.getElementById('addNotes').value = '';
   setTab('stock');
 }
@@ -418,7 +467,14 @@ function matchesSearch(l, q) {
   return l.model.toLowerCase().includes(q) ||
          l.serial.toLowerCase().includes(q) ||
          l.code.includes(q) ||
+         (l.condition || '').toLowerCase().includes(q) ||
          (l.notes || '').toLowerCase().includes(q);
+}
+
+function batteryCell(l) {
+  if (l.battery === null || l.battery === undefined) return '—';
+  const cls = l.battery >= 80 ? 'batt-good' : l.battery >= 50 ? 'batt-mid' : 'batt-low';
+  return '<span class="' + cls + '">' + l.battery + '%</span>';
 }
 
 function fmtDate(iso) {
@@ -557,7 +613,7 @@ function render() {
     const rows = inStock.filter(l => matchesSearch(l, q));
     if (!rows.length) { area.innerHTML = '<p class="empty">' + (q ? 'No matches.' : 'No laptops in stock. Add one above.') + '</p>'; return; }
     area.innerHTML = '<table><thead><tr>' +
-      '<th>Code</th><th>Model</th><th>Serial</th><th>Cost</th><th>Notes</th><th>Added</th><th>Actions</th>' +
+      '<th>Code</th><th>Model</th><th>Serial</th><th>Cost</th><th>Condition</th><th>Battery</th><th>Charger</th><th>Notes</th><th>Added</th><th>Actions</th>' +
       '</tr></thead><tbody>' +
       rows.map(l =>
         '<tr>' +
@@ -565,6 +621,9 @@ function render() {
         '<td>' + esc(l.model) + '</td>' +
         '<td class="serial">' + esc(l.serial) + '</td>' +
         '<td>' + money(l.cost) + '</td>' +
+        '<td>' + esc(l.condition || '—') + '</td>' +
+        '<td>' + batteryCell(l) + '</td>' +
+        '<td>' + (l.charger === undefined ? '—' : l.charger ? 'Yes' : 'No') + '</td>' +
         '<td>' + esc(l.notes) + '</td>' +
         '<td>' + fmtDate(l.dateAdded) + '</td>' +
         '<td><div class="actions-cell">' +
