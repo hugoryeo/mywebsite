@@ -6,48 +6,138 @@
 <title>Laptop Sales Tracker</title>
 <style>
   :root {
-    --bg: #0f172a;
-    --panel: #1e293b;
-    --panel-2: #273449;
-    --border: #334155;
-    --text: #e2e8f0;
-    --muted: #94a3b8;
-    --accent: #38bdf8;
+    --bg: #05030c;
+    --panel: rgba(21, 16, 44, 0.66);
+    --panel-2: rgba(40, 30, 78, 0.55);
+    --border: rgba(139, 92, 246, 0.28);
+    --text: #ece7fb;
+    --muted: #a399c9;
+    --accent: #818cf8;
+    --accent-2: #c084fc;
     --green: #4ade80;
-    --red: #f87171;
-    --yellow: #facc15;
+    --red: #fb7185;
+    --yellow: #fbbf24;
+    --grad: linear-gradient(110deg, #60a5fa, #818cf8 40%, #c084fc 72%, #e879f9);
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
   body {
-    background: var(--bg);
+    background:
+      radial-gradient(ellipse 80% 50% at 50% -10%, rgba(99, 102, 241, 0.18), transparent),
+      var(--bg);
     color: var(--text);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     min-height: 100vh;
     padding: 24px;
+    overflow-x: hidden;
   }
-  h1 { font-size: 1.6rem; margin-bottom: 4px; }
+
+  /* floating ethereal orbs */
+  .orb {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(90px);
+    z-index: -1;
+    pointer-events: none;
+  }
+  .orb-1 {
+    width: 480px; height: 480px; top: -140px; left: -120px;
+    background: radial-gradient(circle, rgba(59, 130, 246, 0.5), transparent 70%);
+    animation: drift1 18s ease-in-out infinite alternate;
+  }
+  .orb-2 {
+    width: 560px; height: 560px; top: 28%; right: -180px;
+    background: radial-gradient(circle, rgba(139, 92, 246, 0.45), transparent 70%);
+    animation: drift2 24s ease-in-out infinite alternate;
+  }
+  .orb-3 {
+    width: 440px; height: 440px; bottom: -160px; left: 28%;
+    background: radial-gradient(circle, rgba(217, 70, 239, 0.32), transparent 70%);
+    animation: drift3 28s ease-in-out infinite alternate;
+  }
+  @keyframes drift1 { to { transform: translate(70px, 50px) scale(1.12); } }
+  @keyframes drift2 { to { transform: translate(-60px, -70px) scale(1.08); } }
+  @keyframes drift3 { to { transform: translate(50px, -40px) scale(1.15); } }
+
+  /* gradient scroll progress bar */
+  #scrollProgress {
+    position: fixed; top: 0; left: 0;
+    height: 3px; width: 0%;
+    background: var(--grad);
+    box-shadow: 0 0 12px rgba(168, 85, 247, 0.8);
+    z-index: 100;
+    transition: width 0.1s linear;
+  }
+
+  /* reveal-on-scroll */
+  .reveal {
+    opacity: 0;
+    transform: translateY(28px);
+    transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .reveal.visible { opacity: 1; transform: none; }
+
+  .gradient-text {
+    background: var(--grad);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  h1 {
+    font-size: 1.7rem; margin-bottom: 4px;
+    background: var(--grad);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    width: fit-content;
+  }
   .subtitle { color: var(--muted); margin-bottom: 24px; font-size: 0.9rem; }
   .container { max-width: 1100px; margin: 0 auto; }
 
   .panel {
     background: var(--panel);
     border: 1px solid var(--border);
-    border-radius: 12px;
+    border-radius: 14px;
     padding: 20px;
     margin-bottom: 20px;
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    box-shadow: 0 0 30px rgba(99, 102, 241, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.04);
   }
-  .panel h2 { font-size: 1.05rem; margin-bottom: 14px; color: var(--accent); }
+  .panel h2 {
+    font-size: 1.05rem; margin-bottom: 14px;
+    background: var(--grad);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    width: fit-content;
+  }
 
   .stats { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 20px; }
   .stat {
     flex: 1; min-width: 140px;
     background: var(--panel);
     border: 1px solid var(--border);
-    border-radius: 12px;
+    border-radius: 14px;
     padding: 14px 18px;
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    box-shadow: 0 0 30px rgba(99, 102, 241, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  .stat:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 30px rgba(139, 92, 246, 0.25);
   }
   .stat .label { color: var(--muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
   .stat .value { font-size: 1.4rem; font-weight: 700; margin-top: 4px; }
+  .stat .value:not(.profit-pos):not(.profit-neg) {
+    background: var(--grad);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    width: fit-content;
+  }
 
   .row { display: flex; gap: 10px; flex-wrap: wrap; }
   .field { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 130px; }
@@ -77,20 +167,22 @@
   .batt-low { color: var(--red); font-weight: 600; }
 
   button {
-    background: var(--accent);
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
     border: none;
     border-radius: 8px;
-    color: #082f49;
+    color: #fff;
     cursor: pointer;
     font-size: 0.9rem;
     font-weight: 600;
     padding: 10px 16px;
+    box-shadow: 0 0 16px rgba(139, 92, 246, 0.35);
+    transition: filter 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
   }
-  button:hover { filter: brightness(1.1); }
-  button.secondary { background: var(--panel-2); color: var(--text); border: 1px solid var(--border); }
-  button.danger { background: transparent; color: var(--red); border: 1px solid var(--red); padding: 5px 10px; font-size: 0.8rem; }
+  button:hover { filter: brightness(1.15); box-shadow: 0 0 24px rgba(139, 92, 246, 0.55); transform: translateY(-1px); }
+  button.secondary { background: var(--panel-2); color: var(--text); border: 1px solid var(--border); box-shadow: none; }
+  button.danger { background: transparent; color: var(--red); border: 1px solid var(--red); padding: 5px 10px; font-size: 0.8rem; box-shadow: none; }
   button.small { padding: 5px 10px; font-size: 0.8rem; }
-  button.sell { background: var(--green); color: #052e16; }
+  button.sell { background: linear-gradient(135deg, #10b981, #22c55e); color: #032b16; box-shadow: 0 0 16px rgba(34, 197, 94, 0.3); }
   .self-end { align-self: flex-end; }
 
   .tabs { display: flex; gap: 8px; margin-bottom: 16px; }
@@ -102,8 +194,17 @@
     border-radius: 8px;
     cursor: pointer;
     font-weight: 600;
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    transition: color 0.2s ease, box-shadow 0.2s ease;
   }
-  .tab.active { background: var(--accent); color: #082f49; border-color: var(--accent); }
+  .tab:hover { color: var(--text); }
+  .tab.active {
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    color: #fff;
+    border-color: transparent;
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.45);
+  }
 
   table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
   th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--border); }
@@ -114,12 +215,13 @@
   .code-badge {
     display: inline-block;
     background: var(--panel-2);
-    border: 1px solid var(--accent);
-    color: var(--accent);
+    border: 1px solid var(--accent-2);
+    color: var(--accent-2);
     border-radius: 6px;
     padding: 2px 8px;
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
     font-weight: 700;
+    box-shadow: 0 0 10px rgba(192, 132, 252, 0.25);
   }
   .code-badge.retired { border-color: var(--border); color: var(--muted); }
   .serial { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.85rem; color: var(--muted); }
@@ -137,11 +239,21 @@
     z-index: 50;
   }
   .modal {
-    background: var(--panel);
+    background: rgba(18, 13, 38, 0.92);
     border: 1px solid var(--border);
-    border-radius: 12px;
+    border-radius: 14px;
     padding: 24px;
     width: 100%; max-width: 420px;
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    box-shadow: 0 0 50px rgba(139, 92, 246, 0.3);
+  }
+  .modal h3 {
+    background: var(--grad);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    width: fit-content;
   }
   .modal h3 { margin-bottom: 4px; }
   .modal .modal-sub { color: var(--muted); font-size: 0.85rem; margin-bottom: 16px; }
@@ -178,23 +290,58 @@
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.72rem;
     background: var(--panel-2); color: var(--muted); border: 1px solid var(--border);
   }
-  .pool-cell.used { background: var(--accent); color: #082f49; border-color: var(--accent); font-weight: 700; }
+  .pool-cell.used {
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    color: #fff;
+    border-color: transparent;
+    font-weight: 700;
+    box-shadow: 0 0 8px rgba(139, 92, 246, 0.4);
+  }
+  .chart-section h3 {
+    background: var(--grad);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    width: fit-content;
+  }
+  .bar-fill { background: linear-gradient(90deg, #3b82f6, #8b5cf6); }
+
+  /* table rows float in on render */
+  tbody tr { animation: rowIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; }
+  tbody tr:nth-child(2) { animation-delay: 0.05s; }
+  tbody tr:nth-child(3) { animation-delay: 0.1s; }
+  tbody tr:nth-child(4) { animation-delay: 0.15s; }
+  tbody tr:nth-child(5) { animation-delay: 0.2s; }
+  tbody tr:nth-child(6) { animation-delay: 0.25s; }
+  tbody tr:nth-child(n+7) { animation-delay: 0.3s; }
+  @keyframes rowIn {
+    from { opacity: 0; transform: translateY(14px); }
+    to { opacity: 1; transform: none; }
+  }
+
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: linear-gradient(#3b82f6, #8b5cf6); border-radius: 5px; }
 </style>
 </head>
 <body>
+<div id="scrollProgress"></div>
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+<div class="orb orb-3"></div>
 <div class="container">
   <h1>💻 Laptop Sales Tracker</h1>
   <p class="subtitle">Track inventory, serial numbers, 2-digit codes, and profit. Data is saved in this browser.</p>
 
-  <div class="stats">
+  <div class="stats reveal">
     <div class="stat"><div class="label">In Stock</div><div class="value" id="statStock">0</div></div>
     <div class="stat"><div class="label">Sold</div><div class="value" id="statSold">0</div></div>
     <div class="stat"><div class="label">Total Cost (stock)</div><div class="value" id="statCost">$0.00</div></div>
     <div class="stat"><div class="label">Total Profit</div><div class="value" id="statProfit">$0.00</div></div>
   </div>
 
-  <div class="panel">
-    <h2>🔎 eBay Sold Price Lookup</h2>
+  <div class="panel reveal">
+    <h2>🔎 eBay UK Sold Price Lookup</h2>
     <div class="row">
       <div class="field grow-2">
         <label for="ebayQuery">Laptop model / keywords</label>
@@ -202,10 +349,10 @@
       </div>
       <button class="self-end" onclick="searchEbay()">Search Sold Listings</button>
     </div>
-    <p class="ebay-note">Opens eBay's Sold &amp; Completed listings in a new tab so you can see real sold prices. Every laptop row also has a "💲 eBay" button to look up that model instantly.</p>
+    <p class="ebay-note">Opens eBay UK's Sold &amp; Completed listings in a new tab so you can see real sold prices in pounds. Every laptop row also has a "💷 eBay" button to look up that model instantly.</p>
   </div>
 
-  <div class="panel">
+  <div class="panel reveal">
     <h2>➕ Add Laptop</h2>
     <div class="row">
       <div class="field grow-2">
@@ -217,7 +364,7 @@
         <input id="addSerial" type="text" placeholder="e.g. 5CG1234XYZ">
       </div>
       <div class="field">
-        <label for="addCost">Cost ($)</label>
+        <label for="addCost">Cost (£)</label>
         <input id="addCost" type="number" min="0" step="0.01" placeholder="0.00">
       </div>
       <div class="field">
@@ -249,13 +396,13 @@
     </div>
   </div>
 
-  <div class="tabs">
+  <div class="tabs reveal">
     <div class="tab active" id="tabStock" onclick="setTab('stock')">In Stock</div>
     <div class="tab" id="tabSold" onclick="setTab('sold')">Sold Log</div>
     <div class="tab" id="tabAnalytics" onclick="setTab('analytics')">📊 Analytics</div>
   </div>
 
-  <div class="panel">
+  <div class="panel reveal">
     <div class="toolbar" id="listToolbar">
       <input id="searchBox" type="text" placeholder="Search by model, serial number, or 2-digit code…" oninput="render()">
       <button class="secondary small" onclick="exportData()">Export Backup</button>
@@ -272,7 +419,7 @@
     <h3>Mark as Sold</h3>
     <p class="modal-sub" id="sellModalInfo"></p>
     <div class="field">
-      <label for="sellPrice">Sale Price ($)</label>
+      <label for="sellPrice">Sale Price (£)</label>
       <input id="sellPrice" type="number" min="0" step="0.01" placeholder="0.00" oninput="updateSellPreview()" onkeydown="if(event.key==='Enter')confirmSell()">
     </div>
     <p class="preview" id="sellPreview"></p>
@@ -299,7 +446,7 @@ function save() {
 
 function money(n) {
   const v = Number(n) || 0;
-  return (v < 0 ? '-$' : '$') + Math.abs(v).toFixed(2);
+  return (v < 0 ? '-£' : '£') + Math.abs(v).toFixed(2);
 }
 function esc(s) {
   return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -368,7 +515,7 @@ function addLaptop() {
 
 /* ---- eBay sold-listings search ---- */
 function ebayUrl(query) {
-  return 'https://www.ebay.com/sch/i.html?_nkw=' + encodeURIComponent(query) + '&LH_Sold=1&LH_Complete=1';
+  return 'https://www.ebay.co.uk/sch/i.html?_nkw=' + encodeURIComponent(query) + '&LH_Sold=1&LH_Complete=1';
 }
 function searchEbay(query) {
   const q = query !== undefined ? query : document.getElementById('ebayQuery').value.trim();
@@ -628,7 +775,7 @@ function render() {
         '<td>' + fmtDate(l.dateAdded) + '</td>' +
         '<td><div class="actions-cell">' +
           '<button class="sell small" onclick="openSellModal(\'' + l.id + '\')">Mark Sold</button>' +
-          '<button class="secondary small" onclick="searchEbay(' + JSON.stringify(l.model).replace(/"/g, '&quot;') + ')">💲 eBay</button>' +
+          '<button class="secondary small" onclick="searchEbay(' + JSON.stringify(l.model).replace(/"/g, '&quot;') + ')">💷 eBay</button>' +
           '<button class="danger" onclick="removeLaptop(\'' + l.id + '\')">Delete</button>' +
         '</div></td></tr>'
       ).join('') + '</tbody></table>';
@@ -649,7 +796,7 @@ function render() {
         '<td class="' + ((l.profit || 0) >= 0 ? 'profit-pos' : 'profit-neg') + '">' + money(l.profit) + '</td>' +
         '<td>' + fmtDate(l.dateSold) + '</td>' +
         '<td><div class="actions-cell">' +
-          '<button class="secondary small" onclick="searchEbay(' + JSON.stringify(l.model).replace(/"/g, '&quot;') + ')">💲 eBay</button>' +
+          '<button class="secondary small" onclick="searchEbay(' + JSON.stringify(l.model).replace(/"/g, '&quot;') + ')">💷 eBay</button>' +
           '<button class="danger" onclick="removeLaptop(\'' + l.id + '\')">Delete</button>' +
         '</div></td></tr>'
       ).join('') + '</tbody></table>';
@@ -662,6 +809,30 @@ document.getElementById('sellModal').addEventListener('click', e => {
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') closeSellModal();
 });
+
+/* ---- scroll effects ---- */
+const revealEls = document.querySelectorAll('.reveal');
+revealEls.forEach((el, i) => { el.style.transitionDelay = (i * 0.12) + 's'; });
+const revealObserver = new IntersectionObserver(entries => {
+  for (const entry of entries) {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+      revealObserver.unobserve(entry.target);
+      // after first reveal, remove stagger so future transitions feel snappy
+      setTimeout(() => { entry.target.style.transitionDelay = '0s'; }, 1500);
+    }
+  }
+}, { threshold: 0.1 });
+revealEls.forEach(el => revealObserver.observe(el));
+
+function updateScrollProgress() {
+  const max = document.documentElement.scrollHeight - window.innerHeight;
+  const pct = max > 0 ? (window.scrollY / max) * 100 : 0;
+  document.getElementById('scrollProgress').style.width = pct + '%';
+}
+window.addEventListener('scroll', updateScrollProgress, { passive: true });
+window.addEventListener('resize', updateScrollProgress, { passive: true });
+updateScrollProgress();
 
 load();
 render();
