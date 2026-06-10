@@ -115,7 +115,7 @@
   .profit-neg { color: var(--red); font-weight: 700; }
   .empty { color: var(--muted); text-align: center; padding: 30px 0; }
   .actions-cell { display: flex; gap: 6px; flex-wrap: wrap; }
-  .hidden { display: none; }
+  .hidden { display: none !important; }
 
   /* modal */
   .modal-overlay {
@@ -139,6 +139,34 @@
   .toolbar { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; align-items: center; }
   .toolbar input { flex: 1; min-width: 220px; }
   .ebay-note { color: var(--muted); font-size: 0.8rem; margin-top: 8px; }
+
+  /* analytics */
+  .metric-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; margin-bottom: 20px; }
+  .metric {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+  }
+  .metric .label { color: var(--muted); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; }
+  .metric .value { font-size: 1.25rem; font-weight: 700; margin-top: 4px; }
+  .metric .sub { color: var(--muted); font-size: 0.75rem; margin-top: 2px; }
+  .chart-section { margin-bottom: 24px; }
+  .chart-section h3 { font-size: 0.95rem; margin-bottom: 12px; color: var(--text); }
+  .bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+  .bar-label { width: 90px; flex-shrink: 0; color: var(--muted); font-size: 0.8rem; text-align: right; }
+  .bar-track { flex: 1; background: var(--panel-2); border-radius: 5px; height: 22px; position: relative; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 5px; background: var(--accent); min-width: 2px; }
+  .bar-fill.green { background: var(--green); }
+  .bar-fill.red { background: var(--red); }
+  .bar-value { width: 110px; flex-shrink: 0; font-size: 0.82rem; font-weight: 600; }
+  .code-pool { display: grid; grid-template-columns: repeat(auto-fill, minmax(34px, 1fr)); gap: 4px; }
+  .pool-cell {
+    text-align: center; padding: 4px 0; border-radius: 5px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.72rem;
+    background: var(--panel-2); color: var(--muted); border: 1px solid var(--border);
+  }
+  .pool-cell.used { background: var(--accent); color: #082f49; border-color: var(--accent); font-weight: 700; }
 </style>
 </head>
 <body>
@@ -191,10 +219,11 @@
   <div class="tabs">
     <div class="tab active" id="tabStock" onclick="setTab('stock')">In Stock</div>
     <div class="tab" id="tabSold" onclick="setTab('sold')">Sold Log</div>
+    <div class="tab" id="tabAnalytics" onclick="setTab('analytics')">📊 Analytics</div>
   </div>
 
   <div class="panel">
-    <div class="toolbar">
+    <div class="toolbar" id="listToolbar">
       <input id="searchBox" type="text" placeholder="Search by model, serial number, or 2-digit code…" oninput="render()">
       <button class="secondary small" onclick="exportData()">Export Backup</button>
       <button class="secondary small" onclick="document.getElementById('importFile').click()">Import Backup</button>
@@ -379,6 +408,8 @@ function setTab(tab) {
   currentTab = tab;
   document.getElementById('tabStock').classList.toggle('active', tab === 'stock');
   document.getElementById('tabSold').classList.toggle('active', tab === 'sold');
+  document.getElementById('tabAnalytics').classList.toggle('active', tab === 'analytics');
+  document.getElementById('listToolbar').classList.toggle('hidden', tab === 'analytics');
   render();
 }
 
@@ -392,6 +423,117 @@ function matchesSearch(l, q) {
 
 function fmtDate(iso) {
   return iso ? new Date(iso).toLocaleDateString() : '';
+}
+
+function barChart(rows, opts) {
+  // rows: [{label, value, display}], opts: {colorBy: 'sign'|'accent'}
+  const max = Math.max(...rows.map(r => Math.abs(r.value)), 1);
+  return rows.map(r => {
+    const pct = Math.abs(r.value) / max * 100;
+    const color = opts.colorBy === 'sign' ? (r.value >= 0 ? 'green' : 'red') : '';
+    return '<div class="bar-row">' +
+      '<div class="bar-label">' + esc(r.label) + '</div>' +
+      '<div class="bar-track"><div class="bar-fill ' + color + '" style="width:' + pct.toFixed(1) + '%"></div></div>' +
+      '<div class="bar-value ' + (opts.colorBy === 'sign' ? (r.value >= 0 ? 'profit-pos' : 'profit-neg') : '') + '">' + r.display + '</div>' +
+      '</div>';
+  }).join('');
+}
+
+function renderAnalytics(area, inStock, sold) {
+  const revenue = sold.reduce((s, l) => s + (l.salePrice || 0), 0);
+  const soldCost = sold.reduce((s, l) => s + l.cost, 0);
+  const profit = revenue - soldCost;
+  const margin = revenue > 0 ? (profit / revenue * 100) : 0;
+  const avgProfit = sold.length ? profit / sold.length : 0;
+  const stockValue = inStock.reduce((s, l) => s + l.cost, 0);
+
+  const daysToSell = sold
+    .filter(l => l.dateAdded && l.dateSold)
+    .map(l => (new Date(l.dateSold) - new Date(l.dateAdded)) / 86400000);
+  const avgDays = daysToSell.length ? daysToSell.reduce((a, b) => a + b, 0) / daysToSell.length : null;
+
+  let best = null, worst = null;
+  for (const l of sold) {
+    if (!best || l.profit > best.profit) best = l;
+    if (!worst || l.profit < worst.profit) worst = l;
+  }
+
+  let html = '<div class="metric-grid">' +
+    metric('Total Revenue', money(revenue)) +
+    metric('Total Profit', '<span class="' + (profit >= 0 ? 'profit-pos' : 'profit-neg') + '">' + money(profit) + '</span>') +
+    metric('Profit Margin', margin.toFixed(1) + '%') +
+    metric('Avg Profit / Sale', money(avgProfit)) +
+    metric('Laptops Sold', String(sold.length)) +
+    metric('In Stock', String(inStock.length), 'worth ' + money(stockValue) + ' at cost') +
+    metric('Avg Days to Sell', avgDays === null ? '—' : avgDays.toFixed(1)) +
+    metric('Best Sale', best ? money(best.profit) : '—', best ? esc(best.model) : '') +
+    metric('Worst Sale', worst ? money(worst.profit) : '—', worst ? esc(worst.model) : '') +
+    '</div>';
+
+  // profit by month (last 12 months with data, oldest first)
+  const byMonth = new Map();
+  for (const l of sold) {
+    if (!l.dateSold) continue;
+    const key = l.dateSold.slice(0, 7);
+    const m = byMonth.get(key) || { profit: 0, count: 0 };
+    m.profit += l.profit || 0;
+    m.count++;
+    byMonth.set(key, m);
+  }
+  const months = [...byMonth.keys()].sort().slice(-12);
+  if (months.length) {
+    html += '<div class="chart-section"><h3>Profit by Month</h3>' +
+      barChart(months.map(k => ({
+        label: monthLabel(k),
+        value: byMonth.get(k).profit,
+        display: money(byMonth.get(k).profit) + ' (' + byMonth.get(k).count + ' sold)'
+      })), { colorBy: 'sign' }) + '</div>';
+  }
+
+  // top models by total profit
+  const byModel = new Map();
+  for (const l of sold) {
+    const m = byModel.get(l.model) || { profit: 0, count: 0 };
+    m.profit += l.profit || 0;
+    m.count++;
+    byModel.set(l.model, m);
+  }
+  const topModels = [...byModel.entries()]
+    .sort((a, b) => b[1].profit - a[1].profit)
+    .slice(0, 8);
+  if (topModels.length) {
+    html += '<div class="chart-section"><h3>Top Models by Profit</h3>' +
+      barChart(topModels.map(([model, m]) => ({
+        label: model.length > 14 ? model.slice(0, 13) + '…' : model,
+        value: m.profit,
+        display: money(m.profit) + ' (' + m.count + ' sold)'
+      })), { colorBy: 'sign' }) + '</div>';
+  }
+
+  // code pool usage
+  const usedCodes = new Set(inStock.map(l => l.code));
+  html += '<div class="chart-section"><h3>Code Pool (' + usedCodes.size + '/100 in use)</h3><div class="code-pool">';
+  for (let i = 0; i < 100; i++) {
+    const code = String(i).padStart(2, '0');
+    html += '<div class="pool-cell' + (usedCodes.has(code) ? ' used' : '') + '">' + code + '</div>';
+  }
+  html += '</div></div>';
+
+  if (!laptops.length) {
+    html = '<p class="empty">No data yet — add some laptops and record sales to see analytics.</p>';
+  }
+  area.innerHTML = html;
+}
+
+function metric(label, value, sub) {
+  return '<div class="metric"><div class="label">' + label + '</div><div class="value">' + value + '</div>' +
+    (sub ? '<div class="sub">' + sub + '</div>' : '') + '</div>';
+}
+
+function monthLabel(key) {
+  const [y, m] = key.split('-');
+  const names = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return names[parseInt(m, 10) - 1] + ' ' + y;
 }
 
 function render() {
@@ -409,7 +551,9 @@ function render() {
   profitEl.textContent = money(totalProfit);
   profitEl.className = 'value ' + (totalProfit >= 0 ? 'profit-pos' : 'profit-neg');
 
-  if (currentTab === 'stock') {
+  if (currentTab === 'analytics') {
+    renderAnalytics(area, inStock, sold);
+  } else if (currentTab === 'stock') {
     const rows = inStock.filter(l => matchesSearch(l, q));
     if (!rows.length) { area.innerHTML = '<p class="empty">' + (q ? 'No matches.' : 'No laptops in stock. Add one above.') + '</p>'; return; }
     area.innerHTML = '<table><thead><tr>' +
