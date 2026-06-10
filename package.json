@@ -1,0 +1,36 @@
+{
+  "name": "laptop-sales-tracker",
+  "version": "1.0.0",
+  "description": "Track laptop inventory, serial numbers, eBay sales, and profit",
+  "main": "main.js",
+  "author": "hugoryeo",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win"
+  },
+  "devDependencies": {
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.hugoryeo.laptop-sales-tracker",
+    "productName": "Laptop Sales Tracker",
+    "files": [
+      "main.js",
+      "laptop-tracker.html",
+      "package.json"
+    ],
+    "win": {
+      "target": ["portable", "nsis"],
+      "icon": "build/icon.png"
+    },
+    "nsis": {
+      "oneClick": true,
+      "artifactName": "LaptopSalesTracker-Setup-${version}.${ext}"
+    },
+    "portable": {
+      "artifactName": "LaptopSalesTracker-Portable-${version}.${ext}"
+    }
+  }
+}

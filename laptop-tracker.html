@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Laptop Sales Tracker</title>
+<style>
+  :root {
+    --bg: #05030c;
+    --panel: rgba(21, 16, 44, 0.66);
+    --panel-2: rgba(40, 30, 78, 0.55);
+    --border: rgba(139, 92, 246, 0.28);
+    --text: #ece7fb;
+    --muted: #a399c9;
+    --accent: #818cf8;
+    --accent-2: #c084fc;
+    --green: #4ade80;
+    --red: #fb7185;
+    --yellow: #fbbf24;
+    --grad: linear-gradient(110deg, #60a5fa, #818cf8 40%, #c084fc 72%, #e879f9);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background:
+      radial-gradient(ellipse 80% 50% at 50% -10%, rgba(99, 102, 241, 0.18), transparent),
+      var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    min-height: 100vh;
+    padding: 24px;
+    overflow-x: hidden;
+  }
+
+  /* animated particle background */
+  #bgCanvas {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+  }
+
+  /* floating ethereal orbs */
+  .orb {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(90px);
+    z-index: -1;
+    pointer-events: none;
+  }
+  .orb-1 {
+    width: 480px; height: 480px; top: -140px; left: -120px;
+    background: radial-gradient(circle, rgba(59, 130, 246, 0.5), transparent 70%);
+    animation: drift1 18s ease-in-out infinite alternate;
+  }
+  .orb-2 {
+    width: 560px; height: 560px; top: 28%; right: -180px;
+    background: radial-gradient(circle, rgba(139, 92, 246, 0.45), transparent 70%);
+    animation: drift2 24s ease-in-out infinite alternate;
+  }
+  .orb-3 {
+    width: 440px; height: 440px; bottom: -160px; left: 28%;
+    background: radial-gradient(circle, rgba(217, 70, 239, 0.32), transparent 70%);
+    animation: drift3 28s ease-in-out infinite alternate;
+  }
+  @keyframes drift1 { to { transform: translate(70px, 50px) scale(1.12); } }
+  @keyframes drift2 { to { transform: translate(-60px, -70px) scale(1.08); } }
+  @keyframes drift3 { to { transform: translate(50px, -40px) scale(1.15); } }
+
+  /* gradient scroll progress bar */
+  #scrollProgress {
+    position: fixed; top: 0; left: 0;
+    height: 3px; width: 0%;
+    background: var(--grad);
+    box-shadow: 0 0 12px rgba(168, 85, 247, 0.8);
+    z-index: 100;
+    transition: width 0.1s linear;
+  }
+
+  /* reveal-on-scroll */
+  .reveal {
+    opacity: 0;
+    transform: translateY(28px);
+    transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .reveal.visible { opacity: 1; transform: none; }
+
+  .gradient-text {
+    background: var(--grad);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  h1 {
+    font-size: 1.7rem; margin-bottom: 4px;
+    background: var(--grad);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    width: fit-content;
+  }
+  .subtitle { color: var(--muted); margin-bottom: 24px; font-size: 0.9rem; }
+  .container { max-width: 1100px; margin: 0 auto; }
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px;
+    margin-bottom: 20px;
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    box-shadow: 0 0 30px rgba(99, 102, 241, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  }
+  .panel h2 {
+    font-size: 1.05rem; margin-bottom: 14px;
+    background: var(--grad);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    width: fit-content;
+  }
+
+  .stats { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 20px; }
+  .stat {
+    flex: 1; min-width: 140px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 18px;
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    box-shadow: 0 0 30px rgba(99, 102, 241, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  .stat:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 30px rgba(139, 92, 246, 0.25);
+  }
+  .stat .label { color: var(--muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
+  .stat .value { font-size: 1.4rem; font-weight: 700; margin-top: 4px; }
+  .stat .value:not(.profit-pos):not(.profit-neg) {
+    background: var(--grad);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    width: fit-content;
+  }
+
+  .row { display: flex; gap: 10px; flex-wrap: wrap; }
+  .row + .row { margin-top: 12px; }
+  .spec-label {
+    margin: 16px 0 10px;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    border-top: 1px solid var(--border);
+    padding-top: 14px;
+  }
+  .spec-line { color: var(--muted); font-size: 0.75rem; margin-top: 3px; }
+  .field { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 130px; }
+  .field.grow-2 { flex: 2; min-width: 200px; }
+  label { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+  input, select {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    padding: 10px 12px;
+    font-size: 0.95rem;
+    width: 100%;
+  }
+  input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+  .checkbox-wrap {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    cursor: pointer;
+  }
+  .checkbox-wrap input { width: auto; accent-color: var(--accent); transform: scale(1.2); cursor: pointer; }
+  .batt-good { color: var(--green); font-weight: 600; }
+  .batt-mid { color: var(--yellow); font-weight: 600; }
+  .batt-low { color: var(--red); font-weight: 600; }
+
+  button {
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 600;
+    padding: 10px 16px;
+    box-shadow: 0 0 16px rgba(139, 92, 246, 0.35);
+    transition: filter 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+  }
+  button:hover { filter: brightness(1.15); box-shadow: 0 0 24px rgba(139, 92, 246, 0.55); transform: translateY(-1px); }
+  button.secondary { background: var(--panel-2); color: var(--text); border: 1px solid var(--border); box-shadow: none; }
+  button.danger { background: transparent; color: var(--red); border: 1px solid var(--red); padding: 5px 10px; font-size: 0.8rem; box-shadow: none; }
+  button.small { padding: 5px 10px; font-size: 0.8rem; }
+  button.sell { background: linear-gradient(135deg, #10b981, #22c55e); color: #032b16; box-shadow: 0 0 16px rgba(34, 197, 94, 0.3); }
+  .self-end { align-self: flex-end; }
+
+  .tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+  .tab {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    transition: color 0.2s ease, box-shadow 0.2s ease;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active {
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    color: #fff;
+    border-color: transparent;
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.45);
+  }
+
+  table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+  th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--border); }
+  th { color: var(--muted); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; }
+  tr:last-child td { border-bottom: none; }
+  .table-wrap { overflow-x: auto; }
+
+  .code-badge {
+    display: inline-block;
+    background: var(--panel-2);
+    border: 1px solid var(--accent-2);
+    color: var(--accent-2);
+    border-radius: 6px;
+    padding: 2px 8px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-weight: 700;
+    box-shadow: 0 0 10px rgba(192, 132, 252, 0.25);
+  }
+  .code-badge.retired { border-color: var(--border); color: var(--muted); box-shadow: none; }
+  .sale-badge {
+    display: inline-block;
+    background: var(--panel-2);
+    border: 1px solid var(--green);
+    color: var(--green);
+    border-radius: 6px;
+    padding: 2px 8px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-weight: 700;
+    box-shadow: 0 0 10px rgba(74, 222, 128, 0.2);
+  }
+  .serial { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.85rem; color: var(--muted); }
+  .profit-pos { color: var(--green); font-weight: 700; }
+  .profit-neg { color: var(--red); font-weight: 700; }
+  .empty { color: var(--muted); text-align: center; padding: 30px 0; }
+  .actions-cell { display: flex; gap: 6px; flex-wrap: wrap; }
+  .hidden { display: none !important; }
+
+  /* modal */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.6);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 50;
+  }
+  .modal {
+    background: rgba(18, 13, 38, 0.92);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px;
+    width: 100%; max-width: 420px;
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    box-shadow: 0 0 50px rgba(139, 92, 246, 0.3);
+  }
+  .modal h3 {
+    background: var(--grad);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    width: fit-content;
+  }
+  .modal h3 { margin-bottom: 4px; }
+  .modal .modal-sub { color: var(--muted); font-size: 0.85rem; margin-bottom: 16px; }
+  .modal .preview { margin: 12px 0; font-size: 1.05rem; }
+  .modal-buttons { display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; }
+
+  .toolbar { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; align-items: center; }
+  .toolbar input { flex: 1; min-width: 220px; }
+  .ebay-note { color: var(--muted); font-size: 0.8rem; margin-top: 8px; }
+
+  /* analytics */
+  .metric-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; margin-bottom: 20px; }
+  .metric {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+  }
+  .metric .label { color: var(--muted); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; }
+  .metric .value { font-size: 1.25rem; font-weight: 700; margin-top: 4px; }
+  .metric .sub { color: var(--muted); font-size: 0.75rem; margin-top: 2px; }
+  .chart-section { margin-bottom: 24px; }
+  .chart-section h3 { font-size: 0.95rem; margin-bottom: 12px; color: var(--text); }
+  .bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+  .bar-label { width: 90px; flex-shrink: 0; color: var(--muted); font-size: 0.8rem; text-align: right; }
+  .bar-track { flex: 1; background: var(--panel-2); border-radius: 5px; height: 22px; position: relative; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 5px; background: var(--accent); min-width: 2px; }
+  .bar-fill.green { background: var(--green); }
+  .bar-fill.red { background: var(--red); }
+  .bar-value { width: 110px; flex-shrink: 0; font-size: 0.82rem; font-weight: 600; }
+  .code-pool { display: grid; grid-template-columns: repeat(auto-fill, minmax(34px, 1fr)); gap: 4px; }
+  .pool-cell {
+    text-align: center; padding: 4px 0; border-radius: 5px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.72rem;
+    background: var(--panel-2); color: var(--muted); border: 1px solid var(--border);
+  }
+  .pool-cell.used {
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    color: #fff;
+    border-color: transparent;
+    font-weight: 700;
+    box-shadow: 0 0 8px rgba(139, 92, 246, 0.4);
+  }
+  .chart-section h3 {
+    background: var(--grad);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    width: fit-content;
+  }
+  .bar-fill { background: linear-gradient(90deg, #3b82f6, #8b5cf6); }
+
+  /* table rows float in on render */
+  tbody tr { animation: rowIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; }
+  tbody tr:nth-child(2) { animation-delay: 0.05s; }
+  tbody tr:nth-child(3) { animation-delay: 0.1s; }
+  tbody tr:nth-child(4) { animation-delay: 0.15s; }
+  tbody tr:nth-child(5) { animation-delay: 0.2s; }
+  tbody tr:nth-child(6) { animation-delay: 0.25s; }
+  tbody tr:nth-child(n+7) { animation-delay: 0.3s; }
+  @keyframes rowIn {
+    from { opacity: 0; transform: translateY(14px); }
+    to { opacity: 1; transform: none; }
+  }
+
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: linear-gradient(#3b82f6, #8b5cf6); border-radius: 5px; }
+</style>
+</head>
+<body>
+<div id="scrollProgress"></div>
+<canvas id="bgCanvas"></canvas>
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+<div class="orb orb-3"></div>
+<div class="container">
+  <h1>💻 Laptop Sales Tracker</h1>
+  <p class="subtitle">Track inventory, serial numbers, 2-digit codes, and profit. Data is saved in this browser.</p>
+
+  <div class="stats reveal">
+    <div class="stat"><div class="label">In Stock</div><div class="value" id="statStock">0</div></div>
+    <div class="stat"><div class="label">Sold</div><div class="value" id="statSold">0</div></div>
+    <div class="stat"><div class="label">Total Cost (stock)</div><div class="value" id="statCost">$0.00</div></div>
+    <div class="stat"><div class="label">Total Profit</div><div class="value" id="statProfit">$0.00</div></div>
+  </div>
+
+  <div class="panel reveal">
+    <h2>🔎 eBay UK Sold Price Lookup</h2>
+    <div class="row">
+      <div class="field grow-2">
+        <label for="ebayQuery">Laptop model / keywords</label>
+        <input id="ebayQuery" type="text" placeholder='e.g. "ThinkPad T480 i5 16GB"' onkeydown="if(event.key==='Enter')searchEbay()">
+      </div>
+      <button class="self-end" onclick="searchEbay()">Search Sold Listings</button>
+    </div>
+    <p class="ebay-note">Opens eBay UK's Sold &amp; Completed listings in a new tab so you can see real sold prices in pounds. Every laptop row also has a "💷 eBay" button to look up that model instantly.</p>
+  </div>
+
+  <div class="panel reveal">
+    <h2>➕ Add Laptop</h2>
+    <div class="row">
+      <div class="field grow-2">
+        <label for="addModel">Model</label>
+        <input id="addModel" type="text" placeholder="e.g. Dell Latitude 7490 i7 16GB">
+      </div>
+      <div class="field">
+        <label for="addSerial">Serial Number</label>
+        <input id="addSerial" type="text" placeholder="e.g. 5CG1234XYZ">
+      </div>
+      <div class="field">
+        <label for="addCost">Cost (£)</label>
+        <input id="addCost" type="number" min="0" step="0.01" placeholder="0.00">
+      </div>
+      <div class="field">
+        <label for="addCondition">Condition</label>
+        <select id="addCondition">
+          <option>Excellent</option>
+          <option>Great</option>
+          <option selected>Good</option>
+          <option>Ok</option>
+          <option>Poor</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="addBattery">Battery Health (%)</label>
+        <input id="addBattery" type="number" min="0" max="100" step="1" placeholder="e.g. 87">
+      </div>
+      <div class="field">
+        <label for="addCharger">Charger</label>
+        <div class="checkbox-wrap" onclick="if(event.target.tagName!=='INPUT')document.getElementById('addCharger').click()">
+          <input id="addCharger" type="checkbox">
+          <span>Included</span>
+        </div>
+      </div>
+    </div>
+    <div class="spec-label">⚙️ Specs (optional)</div>
+    <div class="row">
+      <div class="field">
+        <label for="addCpu">CPU</label>
+        <input id="addCpu" type="text" placeholder="e.g. i5-8350U">
+      </div>
+      <div class="field">
+        <label for="addRam">RAM Size</label>
+        <input id="addRam" type="text" placeholder="e.g. 16GB DDR4">
+      </div>
+      <div class="field">
+        <label for="addStorage">Storage</label>
+        <input id="addStorage" type="text" placeholder="e.g. 512GB SSD">
+      </div>
+      <div class="field">
+        <label for="addResolution">Resolution</label>
+        <input id="addResolution" type="text" placeholder="e.g. 1920x1080">
+      </div>
+      <div class="field">
+        <label for="addGraphics">Graphics</label>
+        <input id="addGraphics" type="text" placeholder="e.g. Intel UHD 620">
+      </div>
+    </div>
+    <div class="row">
+      <div class="field grow-2">
+        <label for="addNotes">Notes (optional)</label>
+        <input id="addNotes" type="text" placeholder="scratches, missing keys, etc.">
+      </div>
+      <button class="self-end" onclick="addLaptop()">Add (auto-assigns code)</button>
+    </div>
+  </div>
+
+  <div class="tabs reveal">
+    <div class="tab active" id="tabStock" onclick="setTab('stock')">In Stock</div>
+    <div class="tab" id="tabSold" onclick="setTab('sold')">Sold Log</div>
+    <div class="tab" id="tabAnalytics" onclick="setTab('analytics')">📊 Analytics</div>
+  </div>
+
+  <div class="panel reveal">
+    <div class="toolbar" id="listToolbar">
+      <input id="searchBox" type="text" placeholder="Search by model, serial, 2-digit code, or sale # (e.g. #001)…" oninput="render()">
+      <button class="secondary small" onclick="exportData()">Export Backup</button>
+      <button class="secondary small" onclick="document.getElementById('importFile').click()">Import Backup</button>
+      <input id="importFile" type="file" accept=".json" class="hidden" onchange="importData(event)">
+    </div>
+    <div class="table-wrap"><div id="listArea"></div></div>
+  </div>
+</div>
+
+<!-- Mark-as-sold modal -->
+<div class="modal-overlay hidden" id="sellModal">
+  <div class="modal">
+    <h3>Mark as Sold</h3>
+    <p class="modal-sub" id="sellModalInfo"></p>
+    <div class="field">
+      <label for="sellPrice">Sale Price (£)</label>
+      <input id="sellPrice" type="number" min="0" step="0.01" placeholder="0.00" oninput="updateSellPreview()" onkeydown="if(event.key==='Enter')confirmSell()">
+    </div>
+    <div class="row" style="margin-top: 10px;">
+      <div class="field">
+        <label for="sellShipping">Shipping Cost (£)</label>
+        <input id="sellShipping" type="number" min="0" step="0.01" placeholder="0.00" oninput="updateSellPreview()" onkeydown="if(event.key==='Enter')confirmSell()">
+      </div>
+      <div class="field">
+        <label for="sellFees">Other Fees (£)</label>
+        <input id="sellFees" type="number" min="0" step="0.01" placeholder="0.00" oninput="updateSellPreview()" onkeydown="if(event.key==='Enter')confirmSell()">
+      </div>
+    </div>
+    <p class="preview" id="sellPreview"></p>
+    <div class="modal-buttons">
+      <button class="secondary" onclick="closeSellModal()">Cancel</button>
+      <button class="sell" onclick="confirmSell()">Confirm Sale</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'laptopTracker.v1';
+let laptops = [];
+let currentTab = 'stock';
+let sellingId = null;
+
+function load() {
+  try { laptops = JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+  catch (e) { laptops = []; }
+  // migration: older sold records have no permanent sale number — backfill in sale-date order
+  const missing = laptops.filter(l => l.status === 'sold' && !l.saleNo)
+    .sort((a, b) => (a.dateSold || '').localeCompare(b.dateSold || ''));
+  if (missing.length) {
+    for (const l of missing) l.saleNo = nextSaleNo();
+    save();
+  }
+}
+function save() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(laptops));
+}
+
+function money(n) {
+  const v = Number(n) || 0;
+  return (v < 0 ? '-£' : '£') + Math.abs(v).toFixed(2);
+}
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/* ---- permanent sale numbers (never reused, unlike 2-digit codes) ---- */
+const SALE_COUNTER_KEY = STORAGE_KEY + '.saleCounter';
+function nextSaleNo() {
+  // a persisted counter keeps numbers unique even after sold records are deleted
+  const stored = parseInt(localStorage.getItem(SALE_COUNTER_KEY), 10) || 0;
+  const maxInData = laptops.reduce((max, l) => Math.max(max, l.saleNo || 0), 0);
+  const next = Math.max(stored, maxInData) + 1;
+  localStorage.setItem(SALE_COUNTER_KEY, String(next));
+  return next;
+}
+function fmtSaleNo(n) {
+  return '#' + String(n).padStart(3, '0');
+}
+
+/* ---- 2-digit code pool (00–99, reused after a laptop is sold) ---- */
+function nextCode() {
+  const inUse = new Set(laptops.filter(l => l.status === 'in-stock').map(l => l.code));
+  for (let i = 0; i < 100; i++) {
+    const code = String(i).padStart(2, '0');
+    if (!inUse.has(code)) return code;
+  }
+  return null;
+}
+
+function addLaptop() {
+  const model = document.getElementById('addModel').value.trim();
+  const serial = document.getElementById('addSerial').value.trim();
+  const cost = parseFloat(document.getElementById('addCost').value);
+  const condition = document.getElementById('addCondition').value;
+  const batteryRaw = document.getElementById('addBattery').value.trim();
+  const charger = document.getElementById('addCharger').checked;
+  const cpu = document.getElementById('addCpu').value.trim();
+  const ram = document.getElementById('addRam').value.trim();
+  const storage = document.getElementById('addStorage').value.trim();
+  const resolution = document.getElementById('addResolution').value.trim();
+  const graphics = document.getElementById('addGraphics').value.trim();
+  const notes = document.getElementById('addNotes').value.trim();
+
+  if (!model) { alert('Please enter a model.'); return; }
+  if (!serial) { alert('Please enter a serial number.'); return; }
+  if (isNaN(cost) || cost < 0) { alert('Please enter a valid cost.'); return; }
+
+  let battery = null;
+  if (batteryRaw !== '') {
+    battery = parseInt(batteryRaw, 10);
+    if (isNaN(battery) || battery < 0 || battery > 100) {
+      alert('Battery health must be a whole number between 0 and 100.');
+      return;
+    }
+  }
+
+  const dupe = laptops.find(l => l.status === 'in-stock' && l.serial.toLowerCase() === serial.toLowerCase());
+  if (dupe && !confirm('A laptop in stock already has serial "' + dupe.serial + '" (code ' + dupe.code + '). Add anyway?')) return;
+
+  const code = nextCode();
+  if (code === null) { alert('All 100 codes (00–99) are in use. Sell a laptop to free one up.'); return; }
+
+  laptops.push({
+    id: Date.now() + '-' + Math.random().toString(36).slice(2, 7),
+    model, serial, cost, notes,
+    condition, battery, charger,
+    cpu, ram, storage, resolution, graphics,
+    code,
+    status: 'in-stock',
+    dateAdded: new Date().toISOString(),
+    salePrice: null,
+    profit: null,
+    dateSold: null
+  });
+  save();
+
+  document.getElementById('addModel').value = '';
+  document.getElementById('addSerial').value = '';
+  document.getElementById('addCost').value = '';
+  document.getElementById('addCondition').value = 'Good';
+  document.getElementById('addBattery').value = '';
+  document.getElementById('addCharger').checked = false;
+  document.getElementById('addCpu').value = '';
+  document.getElementById('addRam').value = '';
+  document.getElementById('addStorage').value = '';
+  document.getElementById('addResolution').value = '';
+  document.getElementById('addGraphics').value = '';
+  document.getElementById('addNotes').value = '';
+  setTab('stock');
+}
+
+/* ---- eBay sold-listings search ---- */
+function ebayUrl(query) {
+  return 'https://www.ebay.co.uk/sch/i.html?_nkw=' + encodeURIComponent(query) + '&LH_Sold=1&LH_Complete=1';
+}
+function searchEbay(query) {
+  const q = query !== undefined ? query : document.getElementById('ebayQuery').value.trim();
+  if (!q) { alert('Type a laptop model to search.'); return; }
+  window.open(ebayUrl(q), '_blank');
+}
+
+/* ---- selling ---- */
+function openSellModal(id) {
+  const l = laptops.find(x => x.id === id);
+  if (!l) return;
+  sellingId = id;
+  document.getElementById('sellModalInfo').textContent =
+    l.model + ' — serial ' + l.serial + ' (code ' + l.code + ') — cost ' + money(l.cost);
+  document.getElementById('sellPrice').value = '';
+  document.getElementById('sellShipping').value = '';
+  document.getElementById('sellFees').value = '';
+  document.getElementById('sellPreview').textContent = '';
+  document.getElementById('sellModal').classList.remove('hidden');
+  document.getElementById('sellPrice').focus();
+}
+function sellDeduction(id) {
+  // blank shipping/fees count as zero
+  const v = parseFloat(document.getElementById(id).value);
+  return isNaN(v) ? 0 : v;
+}
+function updateSellPreview() {
+  const l = laptops.find(x => x.id === sellingId);
+  const price = parseFloat(document.getElementById('sellPrice').value);
+  const el = document.getElementById('sellPreview');
+  if (!l || isNaN(price)) { el.textContent = ''; return; }
+  const shipping = sellDeduction('sellShipping');
+  const fees = sellDeduction('sellFees');
+  const profit = price - l.cost - shipping - fees;
+  el.innerHTML =
+    '<span style="color: var(--muted); font-size: 0.85rem;">' +
+    money(price) + ' − ' + money(l.cost) + ' cost − ' + money(shipping) + ' shipping − ' + money(fees) + ' fees</span><br>' +
+    'Profit: <span class="' + (profit >= 0 ? 'profit-pos' : 'profit-neg') + '">' + money(profit) + '</span>';
+}
+function confirmSell() {
+  const l = laptops.find(x => x.id === sellingId);
+  const price = parseFloat(document.getElementById('sellPrice').value);
+  if (!l) return;
+  if (isNaN(price) || price < 0) { alert('Please enter a valid sale price.'); return; }
+  const shipping = sellDeduction('sellShipping');
+  const fees = sellDeduction('sellFees');
+  if (shipping < 0 || fees < 0) { alert('Shipping and fees cannot be negative.'); return; }
+  l.status = 'sold';
+  l.saleNo = nextSaleNo();
+  l.salePrice = price;
+  l.shipping = shipping;
+  l.fees = fees;
+  l.profit = price - l.cost - shipping - fees;
+  l.dateSold = new Date().toISOString();
+  save();
+  closeSellModal();
+  setTab('sold');
+}
+function closeSellModal() {
+  sellingId = null;
+  document.getElementById('sellModal').classList.add('hidden');
+}
+
+function removeLaptop(id) {
+  const l = laptops.find(x => x.id === id);
+  if (!l) return;
+  if (!confirm('Delete "' + l.model + '" (serial ' + l.serial + ') permanently?')) return;
+  laptops = laptops.filter(x => x.id !== id);
+  save();
+  render();
+}
+
+/* ---- backup ---- */
+function exportData() {
+  const blob = new Blob([JSON.stringify(laptops, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'laptop-tracker-backup-' + new Date().toISOString().slice(0, 10) + '.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+function importData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const data = JSON.parse(reader.result);
+      if (!Array.isArray(data)) throw new Error('not an array');
+      if (!confirm('Replace current data (' + laptops.length + ' laptops) with backup (' + data.length + ' laptops)?')) return;
+      laptops = data;
+      save();
+      render();
+    } catch (e) {
+      alert('That file is not a valid backup.');
+    }
+    event.target.value = '';
+  };
+  reader.readAsText(file);
+}
+
+/* ---- rendering ---- */
+function setTab(tab) {
+  currentTab = tab;
+  document.getElementById('tabStock').classList.toggle('active', tab === 'stock');
+  document.getElementById('tabSold').classList.toggle('active', tab === 'sold');
+  document.getElementById('tabAnalytics').classList.toggle('active', tab === 'analytics');
+  document.getElementById('listToolbar').classList.toggle('hidden', tab === 'analytics');
+  render();
+}
+
+function matchesSearch(l, q) {
+  if (!q) return true;
+  return l.model.toLowerCase().includes(q) ||
+         l.serial.toLowerCase().includes(q) ||
+         l.code.includes(q) ||
+         (l.saleNo !== undefined && fmtSaleNo(l.saleNo).includes(q.replace(/^#?/, '#'))) ||
+         (l.condition || '').toLowerCase().includes(q) ||
+         specParts(l).join(' ').toLowerCase().includes(q) ||
+         (l.notes || '').toLowerCase().includes(q);
+}
+
+function specParts(l) {
+  return [l.cpu, l.ram, l.storage, l.resolution, l.graphics].filter(Boolean);
+}
+
+function modelCell(l) {
+  const parts = specParts(l);
+  return esc(l.model) + (parts.length ? '<div class="spec-line">' + esc(parts.join(' · ')) + '</div>' : '');
+}
+
+function batteryCell(l) {
+  if (l.battery === null || l.battery === undefined) return '—';
+  const cls = l.battery >= 80 ? 'batt-good' : l.battery >= 50 ? 'batt-mid' : 'batt-low';
+  return '<span class="' + cls + '">' + l.battery + '%</span>';
+}
+
+function fmtDate(iso) {
+  return iso ? new Date(iso).toLocaleDateString() : '';
+}
+
+function barChart(rows, opts) {
+  // rows: [{label, value, display}], opts: {colorBy: 'sign'|'accent'}
+  const max = Math.max(...rows.map(r => Math.abs(r.value)), 1);
+  return rows.map(r => {
+    const pct = Math.abs(r.value) / max * 100;
+    const color = opts.colorBy === 'sign' ? (r.value >= 0 ? 'green' : 'red') : '';
+    return '<div class="bar-row">' +
+      '<div class="bar-label">' + esc(r.label) + '</div>' +
+      '<div class="bar-track"><div class="bar-fill ' + color + '" style="width:' + pct.toFixed(1) + '%"></div></div>' +
+      '<div class="bar-value ' + (opts.colorBy === 'sign' ? (r.value >= 0 ? 'profit-pos' : 'profit-neg') : '') + '">' + r.display + '</div>' +
+      '</div>';
+  }).join('');
+}
+
+function renderAnalytics(area, inStock, sold) {
+  const revenue = sold.reduce((s, l) => s + (l.salePrice || 0), 0);
+  const shippingTotal = sold.reduce((s, l) => s + (l.shipping || 0), 0);
+  const feesTotal = sold.reduce((s, l) => s + (l.fees || 0), 0);
+  const profit = sold.reduce((s, l) => s + (l.profit || 0), 0);
+  const margin = revenue > 0 ? (profit / revenue * 100) : 0;
+  const avgProfit = sold.length ? profit / sold.length : 0;
+  const stockValue = inStock.reduce((s, l) => s + l.cost, 0);
+
+  const daysToSell = sold
+    .filter(l => l.dateAdded && l.dateSold)
+    .map(l => (new Date(l.dateSold) - new Date(l.dateAdded)) / 86400000);
+  const avgDays = daysToSell.length ? daysToSell.reduce((a, b) => a + b, 0) / daysToSell.length : null;
+
+  let best = null, worst = null;
+  for (const l of sold) {
+    if (!best || l.profit > best.profit) best = l;
+    if (!worst || l.profit < worst.profit) worst = l;
+  }
+
+  let html = '<div class="metric-grid">' +
+    metric('Total Revenue', money(revenue)) +
+    metric('Total Profit', '<span class="' + (profit >= 0 ? 'profit-pos' : 'profit-neg') + '">' + money(profit) + '</span>') +
+    metric('Shipping & Fees Paid', money(shippingTotal + feesTotal), money(shippingTotal) + ' shipping · ' + money(feesTotal) + ' fees') +
+    metric('Profit Margin', margin.toFixed(1) + '%') +
+    metric('Avg Profit / Sale', money(avgProfit)) +
+    metric('Laptops Sold', String(sold.length)) +
+    metric('In Stock', String(inStock.length), 'worth ' + money(stockValue) + ' at cost') +
+    metric('Avg Days to Sell', avgDays === null ? '—' : avgDays.toFixed(1)) +
+    metric('Best Sale', best ? money(best.profit) : '—', best ? esc(best.model) : '') +
+    metric('Worst Sale', worst ? money(worst.profit) : '—', worst ? esc(worst.model) : '') +
+    '</div>';
+
+  // profit by month (last 12 months with data, oldest first)
+  const byMonth = new Map();
+  for (const l of sold) {
+    if (!l.dateSold) continue;
+    const key = l.dateSold.slice(0, 7);
+    const m = byMonth.get(key) || { profit: 0, count: 0 };
+    m.profit += l.profit || 0;
+    m.count++;
+    byMonth.set(key, m);
+  }
+  const months = [...byMonth.keys()].sort().slice(-12);
+  if (months.length) {
+    html += '<div class="chart-section"><h3>Profit by Month</h3>' +
+      barChart(months.map(k => ({
+        label: monthLabel(k),
+        value: byMonth.get(k).profit,
+        display: money(byMonth.get(k).profit) + ' (' + byMonth.get(k).count + ' sold)'
+      })), { colorBy: 'sign' }) + '</div>';
+  }
+
+  // top models by total profit
+  const byModel = new Map();
+  for (const l of sold) {
+    const m = byModel.get(l.model) || { profit: 0, count: 0 };
+    m.profit += l.profit || 0;
+    m.count++;
+    byModel.set(l.model, m);
+  }
+  const topModels = [...byModel.entries()]
+    .sort((a, b) => b[1].profit - a[1].profit)
+    .slice(0, 8);
+  if (topModels.length) {
+    html += '<div class="chart-section"><h3>Top Models by Profit</h3>' +
+      barChart(topModels.map(([model, m]) => ({
+        label: model.length > 14 ? model.slice(0, 13) + '…' : model,
+        value: m.profit,
+        display: money(m.profit) + ' (' + m.count + ' sold)'
+      })), { colorBy: 'sign' }) + '</div>';
+  }
+
+  // code pool usage
+  const usedCodes = new Set(inStock.map(l => l.code));
+  html += '<div class="chart-section"><h3>Code Pool (' + usedCodes.size + '/100 in use)</h3><div class="code-pool">';
+  for (let i = 0; i < 100; i++) {
+    const code = String(i).padStart(2, '0');
+    html += '<div class="pool-cell' + (usedCodes.has(code) ? ' used' : '') + '">' + code + '</div>';
+  }
+  html += '</div></div>';
+
+  if (!laptops.length) {
+    html = '<p class="empty">No data yet — add some laptops and record sales to see analytics.</p>';
+  }
+  area.innerHTML = html;
+}
+
+function metric(label, value, sub) {
+  return '<div class="metric"><div class="label">' + label + '</div><div class="value">' + value + '</div>' +
+    (sub ? '<div class="sub">' + sub + '</div>' : '') + '</div>';
+}
+
+function monthLabel(key) {
+  const [y, m] = key.split('-');
+  const names = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return names[parseInt(m, 10) - 1] + ' ' + y;
+}
+
+function render() {
+  const q = document.getElementById('searchBox').value.trim().toLowerCase();
+  const area = document.getElementById('listArea');
+
+  const inStock = laptops.filter(l => l.status === 'in-stock');
+  const sold = laptops.filter(l => l.status === 'sold');
+
+  document.getElementById('statStock').textContent = inStock.length;
+  document.getElementById('statSold').textContent = sold.length;
+  document.getElementById('statCost').textContent = money(inStock.reduce((s, l) => s + l.cost, 0));
+  const totalProfit = sold.reduce((s, l) => s + (l.profit || 0), 0);
+  const profitEl = document.getElementById('statProfit');
+  profitEl.textContent = money(totalProfit);
+  profitEl.className = 'value ' + (totalProfit >= 0 ? 'profit-pos' : 'profit-neg');
+
+  if (currentTab === 'analytics') {
+    renderAnalytics(area, inStock, sold);
+  } else if (currentTab === 'stock') {
+    const rows = inStock.filter(l => matchesSearch(l, q));
+    if (!rows.length) { area.innerHTML = '<p class="empty">' + (q ? 'No matches.' : 'No laptops in stock. Add one above.') + '</p>'; return; }
+    area.innerHTML = '<table><thead><tr>' +
+      '<th>Code</th><th>Model</th><th>Serial</th><th>Cost</th><th>Condition</th><th>Battery</th><th>Charger</th><th>Notes</th><th>Added</th><th>Actions</th>' +
+      '</tr></thead><tbody>' +
+      rows.map(l =>
+        '<tr>' +
+        '<td><span class="code-badge">' + esc(l.code) + '</span></td>' +
+        '<td>' + modelCell(l) + '</td>' +
+        '<td class="serial">' + esc(l.serial) + '</td>' +
+        '<td>' + money(l.cost) + '</td>' +
+        '<td>' + esc(l.condition || '—') + '</td>' +
+        '<td>' + batteryCell(l) + '</td>' +
+        '<td>' + (l.charger === undefined ? '—' : l.charger ? 'Yes' : 'No') + '</td>' +
+        '<td>' + esc(l.notes) + '</td>' +
+        '<td>' + fmtDate(l.dateAdded) + '</td>' +
+        '<td><div class="actions-cell">' +
+          '<button class="sell small" onclick="openSellModal(\'' + l.id + '\')">Mark Sold</button>' +
+          '<button class="secondary small" onclick="searchEbay(' + JSON.stringify(l.model).replace(/"/g, '&quot;') + ')">💷 eBay</button>' +
+          '<button class="danger" onclick="removeLaptop(\'' + l.id + '\')">Delete</button>' +
+        '</div></td></tr>'
+      ).join('') + '</tbody></table>';
+  } else {
+    const rows = sold.filter(l => matchesSearch(l, q))
+      .sort((a, b) => (b.dateSold || '').localeCompare(a.dateSold || ''));
+    if (!rows.length) { area.innerHTML = '<p class="empty">' + (q ? 'No matches.' : 'No sold laptops yet.') + '</p>'; return; }
+    area.innerHTML = '<table><thead><tr>' +
+      '<th>Sale #</th><th>Code</th><th>Model</th><th>Serial</th><th>Cost</th><th>Sale Price</th><th>Shipping</th><th>Fees</th><th>Profit</th><th>Sold On</th><th>Actions</th>' +
+      '</tr></thead><tbody>' +
+      rows.map(l =>
+        '<tr>' +
+        '<td><span class="sale-badge">' + fmtSaleNo(l.saleNo) + '</span></td>' +
+        '<td><span class="code-badge retired" title="Code at time of sale — since released for reuse">' + esc(l.code) + '</span></td>' +
+        '<td>' + modelCell(l) + '</td>' +
+        '<td class="serial">' + esc(l.serial) + '</td>' +
+        '<td>' + money(l.cost) + '</td>' +
+        '<td>' + money(l.salePrice) + '</td>' +
+        '<td>' + (l.shipping === undefined ? '—' : money(l.shipping)) + '</td>' +
+        '<td>' + (l.fees === undefined ? '—' : money(l.fees)) + '</td>' +
+        '<td class="' + ((l.profit || 0) >= 0 ? 'profit-pos' : 'profit-neg') + '">' + money(l.profit) + '</td>' +
+        '<td>' + fmtDate(l.dateSold) + '</td>' +
+        '<td><div class="actions-cell">' +
+          '<button class="secondary small" onclick="searchEbay(' + JSON.stringify(l.model).replace(/"/g, '&quot;') + ')">💷 eBay</button>' +
+          '<button class="danger" onclick="removeLaptop(\'' + l.id + '\')">Delete</button>' +
+        '</div></td></tr>'
+      ).join('') + '</tbody></table>';
+  }
+}
+
+document.getElementById('sellModal').addEventListener('click', e => {
+  if (e.target.id === 'sellModal') closeSellModal();
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeSellModal();
+});
+
+/* ---- scroll effects ---- */
+const revealEls = document.querySelectorAll('.reveal');
+revealEls.forEach((el, i) => { el.style.transitionDelay = (i * 0.12) + 's'; });
+const revealObserver = new IntersectionObserver(entries => {
+  for (const entry of entries) {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+      revealObserver.unobserve(entry.target);
+      // after first reveal, remove stagger so future transitions feel snappy
+      setTimeout(() => { entry.target.style.transitionDelay = '0s'; }, 1500);
+    }
+  }
+}, { threshold: 0.1 });
+revealEls.forEach(el => revealObserver.observe(el));
+
+function updateScrollProgress() {
+  const max = document.documentElement.scrollHeight - window.innerHeight;
+  const pct = max > 0 ? (window.scrollY / max) * 100 : 0;
+  document.getElementById('scrollProgress').style.width = pct + '%';
+}
+window.addEventListener('scroll', updateScrollProgress, { passive: true });
+window.addEventListener('resize', updateScrollProgress, { passive: true });
+updateScrollProgress();
+
+/* ---- animated particle background ---- */
+const bgCanvas = document.getElementById('bgCanvas');
+const bgCtx = bgCanvas.getContext('2d');
+const PARTICLE_COLORS = ['96,165,250', '129,140,248', '167,139,250', '192,132,252', '232,121,249'];
+let particles = [];
+const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function resizeBgCanvas() {
+  bgCanvas.width = window.innerWidth;
+  bgCanvas.height = window.innerHeight;
+  const count = Math.min(90, Math.floor(bgCanvas.width * bgCanvas.height / 16000));
+  particles = Array.from({ length: count }, () => ({
+    x: Math.random() * bgCanvas.width,
+    y: Math.random() * bgCanvas.height,
+    r: 0.6 + Math.random() * 1.8,
+    speed: 0.08 + Math.random() * 0.35,
+    drift: (Math.random() - 0.5) * 0.15,
+    color: PARTICLE_COLORS[Math.floor(Math.random() * PARTICLE_COLORS.length)],
+    phase: Math.random() * Math.PI * 2,
+    twinkle: 0.01 + Math.random() * 0.025
+  }));
+}
+
+function drawParticles(animate) {
+  bgCtx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
+  for (const p of particles) {
+    if (animate) {
+      p.y -= p.speed;
+      p.x += p.drift + Math.sin(p.phase) * 0.15;
+      p.phase += p.twinkle;
+      if (p.y < -6) { p.y = bgCanvas.height + 6; p.x = Math.random() * bgCanvas.width; }
+      if (p.x < -6) p.x = bgCanvas.width + 6;
+      if (p.x > bgCanvas.width + 6) p.x = -6;
+    }
+    const alpha = animate ? 0.2 + 0.5 * (0.5 + Math.sin(p.phase) * 0.5) : 0.45;
+    bgCtx.beginPath();
+    bgCtx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    bgCtx.fillStyle = 'rgba(' + p.color + ',' + alpha.toFixed(3) + ')';
+    bgCtx.shadowColor = 'rgba(' + p.color + ',0.9)';
+    bgCtx.shadowBlur = 9;
+    bgCtx.fill();
+  }
+  if (animate) requestAnimationFrame(() => drawParticles(true));
+}
+
+resizeBgCanvas();
+window.addEventListener('resize', resizeBgCanvas, { passive: true });
+drawParticles(!reducedMotion);
+
+load();
+render();
+</script>
+</body>
+</html>
