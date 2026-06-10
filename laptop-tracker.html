@@ -505,7 +505,12 @@ let sellingId = null;
 function load() {
   try { laptops = JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
   catch (e) { laptops = []; }
-  // migration: older sold records have no permanent sale number — backfill in sale-date order
+  migrateSaleNumbers();
+}
+
+// sold records without a permanent sale number (pre-feature data or old
+// backups) get one backfilled in sale-date order
+function migrateSaleNumbers() {
   const missing = laptops.filter(l => l.status === 'sold' && !l.saleNo)
     .sort((a, b) => (a.dateSold || '').localeCompare(b.dateSold || ''));
   if (missing.length) {
@@ -536,7 +541,7 @@ function nextSaleNo() {
   return next;
 }
 function fmtSaleNo(n) {
-  return '#' + String(n).padStart(3, '0');
+  return n ? '#' + String(n).padStart(3, '0') : '—';
 }
 
 /* ---- 2-digit code pool (00–99, reused after a laptop is sold) ---- */
@@ -705,6 +710,7 @@ function importData(event) {
       if (!Array.isArray(data)) throw new Error('not an array');
       if (!confirm('Replace current data (' + laptops.length + ' laptops) with backup (' + data.length + ' laptops)?')) return;
       laptops = data;
+      migrateSaleNumbers();
       save();
       render();
     } catch (e) {
