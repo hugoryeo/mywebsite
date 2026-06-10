@@ -349,6 +349,55 @@
     to { opacity: 1; transform: none; }
   }
 
+  /* manage tab: full laptop cards */
+  .laptop-card {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 14px;
+  }
+  .card-head { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+  .card-title { font-weight: 700; font-size: 1.05rem; flex: 1; min-width: 150px; }
+  .status-pill {
+    padding: 3px 10px; border-radius: 999px;
+    font-size: 0.72rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .status-pill.stock { background: rgba(96, 165, 250, 0.14); color: var(--accent); border: 1px solid var(--accent); }
+  .status-pill.soldp { background: rgba(74, 222, 128, 0.12); color: var(--green); border: 1px solid var(--green); }
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 10px 16px;
+    margin-bottom: 12px;
+  }
+  .cfield .label { color: var(--muted); font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.05em; }
+  .cfield .val { margin-top: 2px; font-size: 0.92rem; }
+  .card-foot {
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 10px; flex-wrap: wrap;
+    border-top: 1px solid var(--border); padding-top: 12px;
+  }
+
+  /* cleaned / reset / listed tags */
+  .tag-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tag-chip {
+    cursor: pointer; user-select: none;
+    padding: 4px 12px; border-radius: 999px;
+    font-size: 0.78rem; font-weight: 600;
+    border: 1px solid var(--border);
+    color: var(--muted); background: transparent;
+    transition: border-color 0.2s, color 0.2s, box-shadow 0.2s;
+  }
+  .tag-chip:hover { border-color: var(--accent); color: var(--text); }
+  .tag-chip.on {
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    color: #fff; border-color: transparent;
+    box-shadow: 0 0 10px rgba(139, 92, 246, 0.35);
+  }
+  .tag-chips.compact .tag-chip { padding: 2px 8px; font-size: 0.7rem; }
+
   ::-webkit-scrollbar { width: 10px; height: 10px; }
   ::-webkit-scrollbar-track { background: var(--bg); }
   ::-webkit-scrollbar-thumb { background: linear-gradient(#3b82f6, #8b5cf6); border-radius: 5px; }
@@ -381,9 +430,17 @@
       <button class="self-end" onclick="searchEbay()">Search Sold Listings</button>
     </div>
     <p class="ebay-note">Opens eBay UK's Sold &amp; Completed listings in a new tab so you can see real sold prices in pounds. Every laptop row also has a "💷 eBay" button to look up that model instantly.</p>
+    <div class="row" style="margin-top: 14px;">
+      <div class="field grow-2">
+        <label for="ebayPaste">Add from eBay — paste a listing title (price too, if you like)</label>
+        <input id="ebayPaste" type="text" placeholder='e.g. "Lenovo ThinkPad T480 14in FHD i5-8350U 16GB RAM 256GB SSD Win 11 £149.99"' onkeydown="if(event.key==='Enter')parseEbayListing()">
+      </div>
+      <button class="self-end secondary" onclick="parseEbayListing()">Parse → Add Form</button>
+    </div>
+    <p class="ebay-note">Copy the title from any eBay listing and the CPU, RAM, storage, resolution, graphics, and price are picked out automatically and dropped into the Add Laptop form.</p>
   </div>
 
-  <div class="panel reveal">
+  <div class="panel hidden" id="addPanel">
     <h2>➕ Add Laptop</h2>
     <div class="row">
       <div class="field grow-2">
@@ -455,6 +512,7 @@
   <div class="tabs reveal">
     <div class="tab active" id="tabStock" onclick="setTab('stock')">In Stock</div>
     <div class="tab" id="tabSold" onclick="setTab('sold')">Sold Log</div>
+    <div class="tab" id="tabManage" onclick="setTab('manage')">🗂 Manage &amp; Add</div>
     <div class="tab" id="tabAnalytics" onclick="setTab('analytics')">📊 Analytics</div>
   </div>
 
@@ -613,7 +671,24 @@ function addLaptop() {
   document.getElementById('addResolution').value = '';
   document.getElementById('addGraphics').value = '';
   document.getElementById('addNotes').value = '';
-  setTab('stock');
+  setTab('manage');
+}
+
+/* ---- cleaned / reset / listed prep tags ---- */
+const TAGS = [['cleaned', 'Cleaned'], ['reset', 'Reset'], ['listed', 'Listed']];
+function tagChips(l, compact) {
+  return '<div class="tag-chips' + (compact ? ' compact' : '') + '">' + TAGS.map(([key, label]) =>
+    '<span class="tag-chip' + (l[key] ? ' on' : '') + '" title="Click to toggle: ' + label + '" ' +
+    'onclick="toggleTag(\'' + l.id + '\',\'' + key + '\')">' +
+    (compact ? label[0] : (l[key] ? '✓ ' : '') + label) + '</span>'
+  ).join('') + '</div>';
+}
+function toggleTag(id, key) {
+  const l = laptops.find(x => x.id === id);
+  if (!l) return;
+  l[key] = !l[key];
+  save();
+  render();
 }
 
 /* ---- eBay sold-listings search ---- */
@@ -624,6 +699,66 @@ function searchEbay(query) {
   const q = query !== undefined ? query : document.getElementById('ebayQuery').value.trim();
   if (!q) { alert('Type a laptop model to search.'); return; }
   window.open(ebayUrl(q), '_blank');
+}
+
+/* ---- add from an eBay listing title ---- */
+function parseEbayListing() {
+  const raw = document.getElementById('ebayPaste').value.trim();
+  if (!raw) { alert('Paste an eBay listing title first.'); return; }
+  if (/^https?:\/\//i.test(raw) && !/\s/.test(raw)) {
+    alert("eBay blocks apps from reading its pages directly, so paste the listing's TITLE text instead of the link — the specs get parsed from the title.");
+    return;
+  }
+  const title = raw.replace(/\s+/g, ' ').trim();
+  const find = re => { const m = title.match(re); return m ? m[0].trim() : ''; };
+
+  const storage = find(/\d+(?:\.\d+)?\s?(?:TB|GB)\s?(?:NVMe\s?SSD|SSD|HDD|eMMC)/i);
+  let ram = find(/\d{1,3}\s?GB\s?(?:RAM|DDR\d\w*|LPDDR\d\w*)/i);
+  if (!ram) {
+    const rest = storage ? title.replace(storage, ' ') : title;
+    const m = rest.match(/\d{1,3}\s?GB\b/i);
+    if (m) ram = m[0].trim();
+  }
+  const cpu = find(/(?:Intel\s?)?(?:Core\s?)?i[3579][\s-]?\d{4,5}[A-Z]{0,2}\b/i)
+    || find(/Ryzen\s?[3579]\s?(?:PRO\s?)?\d{3,4}[A-Z]{0,2}\b/i)
+    || find(/Apple\s?M[1234](?:\s?(?:Pro|Max|Ultra))?\b/i)
+    || find(/\b(?:Celeron|Pentium)\s?[\w-]+/i)
+    || find(/\bi[3579]\b/i);
+  let resolution = find(/\d{3,4}\s?[x×]\s?\d{3,4}/i);
+  if (!resolution) {
+    if (/\b(?:4K|UHD)\b/i.test(title)) resolution = '3840x2160';
+    else if (/\bQHD\b/i.test(title)) resolution = '2560x1440';
+    else if (/\b(?:FHD|Full\s?HD|1080p)\b/i.test(title)) resolution = '1920x1080';
+  }
+  const graphics = find(/(?:RTX|GTX)\s?\d{3,4}\s?(?:Ti|Super)?\b/i)
+    || find(/Radeon\s?(?:RX\s?)?[\w]+/i)
+    || find(/Iris\s?Xe/i)
+    || find(/UHD\s?Graphics(?:\s?\d{3})?/i);
+  const price = title.match(/£\s?(\d+(?:[.,]\d{2})?)/);
+
+  document.getElementById('addModel').value = title.replace(/£\s?\d+(?:[.,]\d{2})?/g, '').replace(/\s+/g, ' ').trim();
+  if (cpu) document.getElementById('addCpu').value = cpu;
+  if (ram) document.getElementById('addRam').value = ram;
+  if (storage) document.getElementById('addStorage').value = storage;
+  if (resolution) document.getElementById('addResolution').value = resolution;
+  if (graphics) document.getElementById('addGraphics').value = graphics;
+  if (price) document.getElementById('addCost').value = price[1].replace(',', '.');
+
+  document.getElementById('ebayPaste').value = '';
+  setTab('manage');
+  document.getElementById('addPanel').scrollIntoView({ behavior: 'smooth' });
+  document.getElementById(price ? 'addSerial' : 'addCost').focus();
+}
+
+/* ---- start an eBay listing prefilled with a laptop's details ---- */
+function listOnEbay(id) {
+  const l = laptops.find(x => x.id === id);
+  if (!l) return;
+  const parts = [l.model];
+  for (const spec of [l.cpu, l.ram, l.storage]) {
+    if (spec && !l.model.toLowerCase().includes(spec.toLowerCase())) parts.push(spec);
+  }
+  window.open('https://www.ebay.co.uk/sl/prelist/suggest?q=' + encodeURIComponent(parts.join(' ')), '_blank');
 }
 
 /* ---- selling ---- */
@@ -726,8 +861,10 @@ function setTab(tab) {
   currentTab = tab;
   document.getElementById('tabStock').classList.toggle('active', tab === 'stock');
   document.getElementById('tabSold').classList.toggle('active', tab === 'sold');
+  document.getElementById('tabManage').classList.toggle('active', tab === 'manage');
   document.getElementById('tabAnalytics').classList.toggle('active', tab === 'analytics');
   document.getElementById('listToolbar').classList.toggle('hidden', tab === 'analytics');
+  document.getElementById('addPanel').classList.toggle('hidden', tab !== 'manage');
   render();
 }
 
@@ -739,6 +876,7 @@ function matchesSearch(l, q) {
          (l.saleNo !== undefined && fmtSaleNo(l.saleNo).includes(q.replace(/^#?/, '#'))) ||
          (l.condition || '').toLowerCase().includes(q) ||
          specParts(l).join(' ').toLowerCase().includes(q) ||
+         TAGS.filter(([key]) => l[key]).map(([, label]) => label).join(' ').toLowerCase().includes(q) ||
          (l.notes || '').toLowerCase().includes(q);
 }
 
@@ -863,6 +1001,66 @@ function renderAnalytics(area, inStock, sold) {
   area.innerHTML = html;
 }
 
+function cardField(label, val) {
+  return '<div class="cfield"><div class="label">' + label + '</div><div class="val">' + val + '</div></div>';
+}
+
+function laptopCard(l) {
+  const isStock = l.status === 'in-stock';
+  const ebayArg = JSON.stringify(l.model).replace(/"/g, '&quot;');
+  return '<div class="laptop-card">' +
+    '<div class="card-head">' +
+      (isStock
+        ? '<span class="code-badge">' + esc(l.code) + '</span>'
+        : '<span class="sale-badge">' + fmtSaleNo(l.saleNo) + '</span><span class="code-badge retired" title="Code at time of sale">' + esc(l.code) + '</span>') +
+      '<span class="card-title">' + esc(l.model) + '</span>' +
+      '<span class="status-pill ' + (isStock ? 'stock' : 'soldp') + '">' + (isStock ? 'In Stock' : 'Sold') + '</span>' +
+    '</div>' +
+    '<div class="card-grid">' +
+      cardField('Serial', '<span class="serial">' + esc(l.serial) + '</span>') +
+      cardField('Cost', money(l.cost)) +
+      cardField('Condition', esc(l.condition || '—')) +
+      cardField('Battery', batteryCell(l)) +
+      cardField('Charger', l.charger === undefined ? '—' : l.charger ? 'Yes' : 'No') +
+      cardField('CPU', esc(l.cpu || '—')) +
+      cardField('RAM', esc(l.ram || '—')) +
+      cardField('Storage', esc(l.storage || '—')) +
+      cardField('Resolution', esc(l.resolution || '—')) +
+      cardField('Graphics', esc(l.graphics || '—')) +
+      cardField('Added', fmtDate(l.dateAdded)) +
+      (isStock ? '' :
+        cardField('Sale Price', money(l.salePrice)) +
+        cardField('Shipping', l.shipping === undefined ? '—' : money(l.shipping)) +
+        cardField('Fees', l.fees === undefined ? '—' : money(l.fees)) +
+        cardField('Profit', '<span class="' + ((l.profit || 0) >= 0 ? 'profit-pos' : 'profit-neg') + '">' + money(l.profit) + '</span>') +
+        cardField('Sold On', fmtDate(l.dateSold))) +
+      (l.notes ? cardField('Notes', esc(l.notes)) : '') +
+    '</div>' +
+    '<div class="card-foot">' +
+      tagChips(l, false) +
+      '<div class="actions-cell">' +
+        (isStock
+          ? '<button class="sell small" onclick="openSellModal(\'' + l.id + '\')">Mark Sold</button>' +
+            '<button class="secondary small" onclick="listOnEbay(\'' + l.id + '\')">🏷 List on eBay</button>'
+          : '') +
+        '<button class="secondary small" onclick="searchEbay(' + ebayArg + ')">💷 eBay</button>' +
+        '<button class="danger" onclick="removeLaptop(\'' + l.id + '\')">Delete</button>' +
+      '</div>' +
+    '</div>' +
+  '</div>';
+}
+
+function renderManage(area, q, inStock, sold) {
+  const stockCards = inStock.filter(l => matchesSearch(l, q));
+  const soldCards = sold.filter(l => matchesSearch(l, q))
+    .sort((a, b) => (b.dateSold || '').localeCompare(a.dateSold || ''));
+  if (!stockCards.length && !soldCards.length) {
+    area.innerHTML = '<p class="empty">' + (q ? 'No matches.' : 'No laptops yet — add one above, or paste an eBay listing title into the lookup panel.') + '</p>';
+    return;
+  }
+  area.innerHTML = stockCards.map(laptopCard).join('') + soldCards.map(laptopCard).join('');
+}
+
 function metric(label, value, sub) {
   return '<div class="metric"><div class="label">' + label + '</div><div class="value">' + value + '</div>' +
     (sub ? '<div class="sub">' + sub + '</div>' : '') + '</div>';
@@ -891,11 +1089,13 @@ function render() {
 
   if (currentTab === 'analytics') {
     renderAnalytics(area, inStock, sold);
+  } else if (currentTab === 'manage') {
+    renderManage(area, q, inStock, sold);
   } else if (currentTab === 'stock') {
     const rows = inStock.filter(l => matchesSearch(l, q));
     if (!rows.length) { area.innerHTML = '<p class="empty">' + (q ? 'No matches.' : 'No laptops in stock. Add one above.') + '</p>'; return; }
     area.innerHTML = '<table><thead><tr>' +
-      '<th>Code</th><th>Model</th><th>Serial</th><th>Cost</th><th>Condition</th><th>Battery</th><th>Charger</th><th>Notes</th><th>Added</th><th>Actions</th>' +
+      '<th>Code</th><th>Model</th><th>Serial</th><th>Cost</th><th>Condition</th><th>Battery</th><th>Charger</th><th title="Cleaned / Reset / Listed">Prep</th><th>Notes</th><th>Added</th><th>Actions</th>' +
       '</tr></thead><tbody>' +
       rows.map(l =>
         '<tr>' +
@@ -906,6 +1106,7 @@ function render() {
         '<td>' + esc(l.condition || '—') + '</td>' +
         '<td>' + batteryCell(l) + '</td>' +
         '<td>' + (l.charger === undefined ? '—' : l.charger ? 'Yes' : 'No') + '</td>' +
+        '<td>' + tagChips(l, true) + '</td>' +
         '<td>' + esc(l.notes) + '</td>' +
         '<td>' + fmtDate(l.dateAdded) + '</td>' +
         '<td><div class="actions-cell">' +
