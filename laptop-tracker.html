@@ -467,6 +467,16 @@
       <label for="sellPrice">Sale Price (£)</label>
       <input id="sellPrice" type="number" min="0" step="0.01" placeholder="0.00" oninput="updateSellPreview()" onkeydown="if(event.key==='Enter')confirmSell()">
     </div>
+    <div class="row" style="margin-top: 10px;">
+      <div class="field">
+        <label for="sellShipping">Shipping Cost (£)</label>
+        <input id="sellShipping" type="number" min="0" step="0.01" placeholder="0.00" oninput="updateSellPreview()" onkeydown="if(event.key==='Enter')confirmSell()">
+      </div>
+      <div class="field">
+        <label for="sellFees">Other Fees (£)</label>
+        <input id="sellFees" type="number" min="0" step="0.01" placeholder="0.00" oninput="updateSellPreview()" onkeydown="if(event.key==='Enter')confirmSell()">
+      </div>
+    </div>
     <p class="preview" id="sellPreview"></p>
     <div class="modal-buttons">
       <button class="secondary" onclick="closeSellModal()">Cancel</button>
@@ -587,26 +597,43 @@ function openSellModal(id) {
   document.getElementById('sellModalInfo').textContent =
     l.model + ' — serial ' + l.serial + ' (code ' + l.code + ') — cost ' + money(l.cost);
   document.getElementById('sellPrice').value = '';
+  document.getElementById('sellShipping').value = '';
+  document.getElementById('sellFees').value = '';
   document.getElementById('sellPreview').textContent = '';
   document.getElementById('sellModal').classList.remove('hidden');
   document.getElementById('sellPrice').focus();
+}
+function sellDeduction(id) {
+  // blank shipping/fees count as zero
+  const v = parseFloat(document.getElementById(id).value);
+  return isNaN(v) ? 0 : v;
 }
 function updateSellPreview() {
   const l = laptops.find(x => x.id === sellingId);
   const price = parseFloat(document.getElementById('sellPrice').value);
   const el = document.getElementById('sellPreview');
   if (!l || isNaN(price)) { el.textContent = ''; return; }
-  const profit = price - l.cost;
-  el.innerHTML = 'Profit: <span class="' + (profit >= 0 ? 'profit-pos' : 'profit-neg') + '">' + money(profit) + '</span>';
+  const shipping = sellDeduction('sellShipping');
+  const fees = sellDeduction('sellFees');
+  const profit = price - l.cost - shipping - fees;
+  el.innerHTML =
+    '<span style="color: var(--muted); font-size: 0.85rem;">' +
+    money(price) + ' − ' + money(l.cost) + ' cost − ' + money(shipping) + ' shipping − ' + money(fees) + ' fees</span><br>' +
+    'Profit: <span class="' + (profit >= 0 ? 'profit-pos' : 'profit-neg') + '">' + money(profit) + '</span>';
 }
 function confirmSell() {
   const l = laptops.find(x => x.id === sellingId);
   const price = parseFloat(document.getElementById('sellPrice').value);
   if (!l) return;
   if (isNaN(price) || price < 0) { alert('Please enter a valid sale price.'); return; }
+  const shipping = sellDeduction('sellShipping');
+  const fees = sellDeduction('sellFees');
+  if (shipping < 0 || fees < 0) { alert('Shipping and fees cannot be negative.'); return; }
   l.status = 'sold';
   l.salePrice = price;
-  l.profit = price - l.cost;
+  l.shipping = shipping;
+  l.fees = fees;
+  l.profit = price - l.cost - shipping - fees;
   l.dateSold = new Date().toISOString();
   save();
   closeSellModal();
@@ -710,8 +737,9 @@ function barChart(rows, opts) {
 
 function renderAnalytics(area, inStock, sold) {
   const revenue = sold.reduce((s, l) => s + (l.salePrice || 0), 0);
-  const soldCost = sold.reduce((s, l) => s + l.cost, 0);
-  const profit = revenue - soldCost;
+  const shippingTotal = sold.reduce((s, l) => s + (l.shipping || 0), 0);
+  const feesTotal = sold.reduce((s, l) => s + (l.fees || 0), 0);
+  const profit = sold.reduce((s, l) => s + (l.profit || 0), 0);
   const margin = revenue > 0 ? (profit / revenue * 100) : 0;
   const avgProfit = sold.length ? profit / sold.length : 0;
   const stockValue = inStock.reduce((s, l) => s + l.cost, 0);
@@ -730,6 +758,7 @@ function renderAnalytics(area, inStock, sold) {
   let html = '<div class="metric-grid">' +
     metric('Total Revenue', money(revenue)) +
     metric('Total Profit', '<span class="' + (profit >= 0 ? 'profit-pos' : 'profit-neg') + '">' + money(profit) + '</span>') +
+    metric('Shipping & Fees Paid', money(shippingTotal + feesTotal), money(shippingTotal) + ' shipping · ' + money(feesTotal) + ' fees') +
     metric('Profit Margin', margin.toFixed(1) + '%') +
     metric('Avg Profit / Sale', money(avgProfit)) +
     metric('Laptops Sold', String(sold.length)) +
@@ -850,7 +879,7 @@ function render() {
       .sort((a, b) => (b.dateSold || '').localeCompare(a.dateSold || ''));
     if (!rows.length) { area.innerHTML = '<p class="empty">' + (q ? 'No matches.' : 'No sold laptops yet.') + '</p>'; return; }
     area.innerHTML = '<table><thead><tr>' +
-      '<th>Code</th><th>Model</th><th>Serial</th><th>Cost</th><th>Sale Price</th><th>Profit</th><th>Sold On</th><th>Actions</th>' +
+      '<th>Code</th><th>Model</th><th>Serial</th><th>Cost</th><th>Sale Price</th><th>Shipping</th><th>Fees</th><th>Profit</th><th>Sold On</th><th>Actions</th>' +
       '</tr></thead><tbody>' +
       rows.map(l =>
         '<tr>' +
@@ -859,6 +888,8 @@ function render() {
         '<td class="serial">' + esc(l.serial) + '</td>' +
         '<td>' + money(l.cost) + '</td>' +
         '<td>' + money(l.salePrice) + '</td>' +
+        '<td>' + (l.shipping === undefined ? '—' : money(l.shipping)) + '</td>' +
+        '<td>' + (l.fees === undefined ? '—' : money(l.fees)) + '</td>' +
         '<td class="' + ((l.profit || 0) >= 0 ? 'profit-pos' : 'profit-neg') + '">' + money(l.profit) + '</td>' +
         '<td>' + fmtDate(l.dateSold) + '</td>' +
         '<td><div class="actions-cell">' +
