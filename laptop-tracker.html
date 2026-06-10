@@ -242,7 +242,18 @@
     font-weight: 700;
     box-shadow: 0 0 10px rgba(192, 132, 252, 0.25);
   }
-  .code-badge.retired { border-color: var(--border); color: var(--muted); }
+  .code-badge.retired { border-color: var(--border); color: var(--muted); box-shadow: none; }
+  .sale-badge {
+    display: inline-block;
+    background: var(--panel-2);
+    border: 1px solid var(--green);
+    color: var(--green);
+    border-radius: 6px;
+    padding: 2px 8px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-weight: 700;
+    box-shadow: 0 0 10px rgba(74, 222, 128, 0.2);
+  }
   .serial { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.85rem; color: var(--muted); }
   .profit-pos { color: var(--green); font-weight: 700; }
   .profit-neg { color: var(--red); font-weight: 700; }
@@ -449,7 +460,7 @@
 
   <div class="panel reveal">
     <div class="toolbar" id="listToolbar">
-      <input id="searchBox" type="text" placeholder="Search by model, serial number, or 2-digit code…" oninput="render()">
+      <input id="searchBox" type="text" placeholder="Search by model, serial, 2-digit code, or sale # (e.g. #001)…" oninput="render()">
       <button class="secondary small" onclick="exportData()">Export Backup</button>
       <button class="secondary small" onclick="document.getElementById('importFile').click()">Import Backup</button>
       <input id="importFile" type="file" accept=".json" class="hidden" onchange="importData(event)">
@@ -494,6 +505,13 @@ let sellingId = null;
 function load() {
   try { laptops = JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
   catch (e) { laptops = []; }
+  // migration: older sold records have no permanent sale number — backfill in sale-date order
+  const missing = laptops.filter(l => l.status === 'sold' && !l.saleNo)
+    .sort((a, b) => (a.dateSold || '').localeCompare(b.dateSold || ''));
+  if (missing.length) {
+    for (const l of missing) l.saleNo = nextSaleNo();
+    save();
+  }
 }
 function save() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(laptops));
@@ -505,6 +523,20 @@ function money(n) {
 }
 function esc(s) {
   return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/* ---- permanent sale numbers (never reused, unlike 2-digit codes) ---- */
+const SALE_COUNTER_KEY = STORAGE_KEY + '.saleCounter';
+function nextSaleNo() {
+  // a persisted counter keeps numbers unique even after sold records are deleted
+  const stored = parseInt(localStorage.getItem(SALE_COUNTER_KEY), 10) || 0;
+  const maxInData = laptops.reduce((max, l) => Math.max(max, l.saleNo || 0), 0);
+  const next = Math.max(stored, maxInData) + 1;
+  localStorage.setItem(SALE_COUNTER_KEY, String(next));
+  return next;
+}
+function fmtSaleNo(n) {
+  return '#' + String(n).padStart(3, '0');
 }
 
 /* ---- 2-digit code pool (00–99, reused after a laptop is sold) ---- */
@@ -630,6 +662,7 @@ function confirmSell() {
   const fees = sellDeduction('sellFees');
   if (shipping < 0 || fees < 0) { alert('Shipping and fees cannot be negative.'); return; }
   l.status = 'sold';
+  l.saleNo = nextSaleNo();
   l.salePrice = price;
   l.shipping = shipping;
   l.fees = fees;
@@ -697,6 +730,7 @@ function matchesSearch(l, q) {
   return l.model.toLowerCase().includes(q) ||
          l.serial.toLowerCase().includes(q) ||
          l.code.includes(q) ||
+         (l.saleNo !== undefined && fmtSaleNo(l.saleNo).includes(q.replace(/^#?/, '#'))) ||
          (l.condition || '').toLowerCase().includes(q) ||
          specParts(l).join(' ').toLowerCase().includes(q) ||
          (l.notes || '').toLowerCase().includes(q);
@@ -879,11 +913,12 @@ function render() {
       .sort((a, b) => (b.dateSold || '').localeCompare(a.dateSold || ''));
     if (!rows.length) { area.innerHTML = '<p class="empty">' + (q ? 'No matches.' : 'No sold laptops yet.') + '</p>'; return; }
     area.innerHTML = '<table><thead><tr>' +
-      '<th>Code</th><th>Model</th><th>Serial</th><th>Cost</th><th>Sale Price</th><th>Shipping</th><th>Fees</th><th>Profit</th><th>Sold On</th><th>Actions</th>' +
+      '<th>Sale #</th><th>Code</th><th>Model</th><th>Serial</th><th>Cost</th><th>Sale Price</th><th>Shipping</th><th>Fees</th><th>Profit</th><th>Sold On</th><th>Actions</th>' +
       '</tr></thead><tbody>' +
       rows.map(l =>
         '<tr>' +
-        '<td><span class="code-badge retired" title="Code released — reusable">' + esc(l.code) + '</span></td>' +
+        '<td><span class="sale-badge">' + fmtSaleNo(l.saleNo) + '</span></td>' +
+        '<td><span class="code-badge retired" title="Code at time of sale — since released for reuse">' + esc(l.code) + '</span></td>' +
         '<td>' + modelCell(l) + '</td>' +
         '<td class="serial">' + esc(l.serial) + '</td>' +
         '<td>' + money(l.cost) + '</td>' +
