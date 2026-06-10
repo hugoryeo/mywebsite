@@ -32,6 +32,14 @@
     overflow-x: hidden;
   }
 
+  /* animated particle background */
+  #bgCanvas {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+  }
+
   /* floating ethereal orbs */
   .orb {
     position: fixed;
@@ -140,6 +148,17 @@
   }
 
   .row { display: flex; gap: 10px; flex-wrap: wrap; }
+  .row + .row { margin-top: 12px; }
+  .spec-label {
+    margin: 16px 0 10px;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    border-top: 1px solid var(--border);
+    padding-top: 14px;
+  }
+  .spec-line { color: var(--muted); font-size: 0.75rem; margin-top: 3px; }
   .field { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 130px; }
   .field.grow-2 { flex: 2; min-width: 200px; }
   label { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
@@ -326,6 +345,7 @@
 </head>
 <body>
 <div id="scrollProgress"></div>
+<canvas id="bgCanvas"></canvas>
 <div class="orb orb-1"></div>
 <div class="orb orb-2"></div>
 <div class="orb orb-3"></div>
@@ -388,7 +408,32 @@
           <span>Included</span>
         </div>
       </div>
+    </div>
+    <div class="spec-label">⚙️ Specs (optional)</div>
+    <div class="row">
       <div class="field">
+        <label for="addCpu">CPU</label>
+        <input id="addCpu" type="text" placeholder="e.g. i5-8350U">
+      </div>
+      <div class="field">
+        <label for="addRam">RAM Size</label>
+        <input id="addRam" type="text" placeholder="e.g. 16GB DDR4">
+      </div>
+      <div class="field">
+        <label for="addStorage">Storage</label>
+        <input id="addStorage" type="text" placeholder="e.g. 512GB SSD">
+      </div>
+      <div class="field">
+        <label for="addResolution">Resolution</label>
+        <input id="addResolution" type="text" placeholder="e.g. 1920x1080">
+      </div>
+      <div class="field">
+        <label for="addGraphics">Graphics</label>
+        <input id="addGraphics" type="text" placeholder="e.g. Intel UHD 620">
+      </div>
+    </div>
+    <div class="row">
+      <div class="field grow-2">
         <label for="addNotes">Notes (optional)</label>
         <input id="addNotes" type="text" placeholder="scratches, missing keys, etc.">
       </div>
@@ -469,6 +514,11 @@ function addLaptop() {
   const condition = document.getElementById('addCondition').value;
   const batteryRaw = document.getElementById('addBattery').value.trim();
   const charger = document.getElementById('addCharger').checked;
+  const cpu = document.getElementById('addCpu').value.trim();
+  const ram = document.getElementById('addRam').value.trim();
+  const storage = document.getElementById('addStorage').value.trim();
+  const resolution = document.getElementById('addResolution').value.trim();
+  const graphics = document.getElementById('addGraphics').value.trim();
   const notes = document.getElementById('addNotes').value.trim();
 
   if (!model) { alert('Please enter a model.'); return; }
@@ -494,6 +544,7 @@ function addLaptop() {
     id: Date.now() + '-' + Math.random().toString(36).slice(2, 7),
     model, serial, cost, notes,
     condition, battery, charger,
+    cpu, ram, storage, resolution, graphics,
     code,
     status: 'in-stock',
     dateAdded: new Date().toISOString(),
@@ -509,6 +560,11 @@ function addLaptop() {
   document.getElementById('addCondition').value = 'Good';
   document.getElementById('addBattery').value = '';
   document.getElementById('addCharger').checked = false;
+  document.getElementById('addCpu').value = '';
+  document.getElementById('addRam').value = '';
+  document.getElementById('addStorage').value = '';
+  document.getElementById('addResolution').value = '';
+  document.getElementById('addGraphics').value = '';
   document.getElementById('addNotes').value = '';
   setTab('stock');
 }
@@ -615,7 +671,17 @@ function matchesSearch(l, q) {
          l.serial.toLowerCase().includes(q) ||
          l.code.includes(q) ||
          (l.condition || '').toLowerCase().includes(q) ||
+         specParts(l).join(' ').toLowerCase().includes(q) ||
          (l.notes || '').toLowerCase().includes(q);
+}
+
+function specParts(l) {
+  return [l.cpu, l.ram, l.storage, l.resolution, l.graphics].filter(Boolean);
+}
+
+function modelCell(l) {
+  const parts = specParts(l);
+  return esc(l.model) + (parts.length ? '<div class="spec-line">' + esc(parts.join(' · ')) + '</div>' : '');
 }
 
 function batteryCell(l) {
@@ -765,7 +831,7 @@ function render() {
       rows.map(l =>
         '<tr>' +
         '<td><span class="code-badge">' + esc(l.code) + '</span></td>' +
-        '<td>' + esc(l.model) + '</td>' +
+        '<td>' + modelCell(l) + '</td>' +
         '<td class="serial">' + esc(l.serial) + '</td>' +
         '<td>' + money(l.cost) + '</td>' +
         '<td>' + esc(l.condition || '—') + '</td>' +
@@ -789,7 +855,7 @@ function render() {
       rows.map(l =>
         '<tr>' +
         '<td><span class="code-badge retired" title="Code released — reusable">' + esc(l.code) + '</span></td>' +
-        '<td>' + esc(l.model) + '</td>' +
+        '<td>' + modelCell(l) + '</td>' +
         '<td class="serial">' + esc(l.serial) + '</td>' +
         '<td>' + money(l.cost) + '</td>' +
         '<td>' + money(l.salePrice) + '</td>' +
@@ -833,6 +899,55 @@ function updateScrollProgress() {
 window.addEventListener('scroll', updateScrollProgress, { passive: true });
 window.addEventListener('resize', updateScrollProgress, { passive: true });
 updateScrollProgress();
+
+/* ---- animated particle background ---- */
+const bgCanvas = document.getElementById('bgCanvas');
+const bgCtx = bgCanvas.getContext('2d');
+const PARTICLE_COLORS = ['96,165,250', '129,140,248', '167,139,250', '192,132,252', '232,121,249'];
+let particles = [];
+const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function resizeBgCanvas() {
+  bgCanvas.width = window.innerWidth;
+  bgCanvas.height = window.innerHeight;
+  const count = Math.min(90, Math.floor(bgCanvas.width * bgCanvas.height / 16000));
+  particles = Array.from({ length: count }, () => ({
+    x: Math.random() * bgCanvas.width,
+    y: Math.random() * bgCanvas.height,
+    r: 0.6 + Math.random() * 1.8,
+    speed: 0.08 + Math.random() * 0.35,
+    drift: (Math.random() - 0.5) * 0.15,
+    color: PARTICLE_COLORS[Math.floor(Math.random() * PARTICLE_COLORS.length)],
+    phase: Math.random() * Math.PI * 2,
+    twinkle: 0.01 + Math.random() * 0.025
+  }));
+}
+
+function drawParticles(animate) {
+  bgCtx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
+  for (const p of particles) {
+    if (animate) {
+      p.y -= p.speed;
+      p.x += p.drift + Math.sin(p.phase) * 0.15;
+      p.phase += p.twinkle;
+      if (p.y < -6) { p.y = bgCanvas.height + 6; p.x = Math.random() * bgCanvas.width; }
+      if (p.x < -6) p.x = bgCanvas.width + 6;
+      if (p.x > bgCanvas.width + 6) p.x = -6;
+    }
+    const alpha = animate ? 0.2 + 0.5 * (0.5 + Math.sin(p.phase) * 0.5) : 0.45;
+    bgCtx.beginPath();
+    bgCtx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    bgCtx.fillStyle = 'rgba(' + p.color + ',' + alpha.toFixed(3) + ')';
+    bgCtx.shadowColor = 'rgba(' + p.color + ',0.9)';
+    bgCtx.shadowBlur = 9;
+    bgCtx.fill();
+  }
+  if (animate) requestAnimationFrame(() => drawParticles(true));
+}
+
+resizeBgCanvas();
+window.addEventListener('resize', resizeBgCanvas, { passive: true });
+drawParticles(!reducedMotion);
 
 load();
 render();
