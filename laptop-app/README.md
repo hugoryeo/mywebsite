@@ -12,13 +12,24 @@ A Next.js app for tracking laptop inventory, prep status, eBay listings, and AI-
 
 ## Getting started
 
+Requires **Node 22 LTS**. Node 24 has no prebuilt `better-sqlite3` binary, so
+`npm install` tries to compile it and fails looking for Python.
+
 ```bash
-npm install
+npm install              # also generates the Prisma client
 npx prisma migrate dev   # creates dev.db and applies the schema
 npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
+
+No `.env` is needed — the database defaults to `dev.db` in this directory. Set
+`DATABASE_URL` only if you want it somewhere else.
+
+The Prisma client is generated into `app/generated/prisma`, which is gitignored.
+`npm install`, `npm run dev` and `npm run build` all run `prisma generate` for
+you, so a fresh clone needs no extra step; run `npx prisma generate` by hand
+only if you ever need to force it.
 
 ## Pages
 

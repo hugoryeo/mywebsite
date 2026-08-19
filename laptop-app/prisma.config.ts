@@ -3,12 +3,16 @@
 import "dotenv/config";
 import { defineConfig } from "prisma/config";
 
+// `.env` is gitignored, so a fresh clone has no DATABASE_URL and the migrate
+// commands would fail before the app was ever run. Default to the same local
+// SQLite file `app/lib/prisma.ts` falls back to, so cloning and running works
+// with no setup; set DATABASE_URL to point somewhere else.
+const url = process.env["DATABASE_URL"] ?? "file:./dev.db";
+
 export default defineConfig({
   schema: "prisma/schema.prisma",
   migrations: {
     path: "prisma/migrations",
   },
-  datasource: {
-    url: process.env["DATABASE_URL"],
-  },
+  datasource: { url },
 });
