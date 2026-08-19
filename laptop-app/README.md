@@ -6,7 +6,7 @@ A Next.js app for tracking laptop inventory, prep status, eBay listings, and AI-
 
 - **Next.js 16** (App Router, TypeScript, Server Actions)
 - **Prisma 7 + SQLite** (`better-sqlite3` driver adapter) for the database
-- **Tailwind CSS v4** for the white/navy "3D" theme
+- **Tailwind CSS v4** for the "Megacorp" theme — red-on-black corporate terminal
 - **Anthropic API** (Claude, with the web search tool) powers the Pricing page's AI agent
 - **eBay Trading API + OAuth** powers the eBay Listings page
 
@@ -22,13 +22,22 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ## Pages
 
-- **Launch** (`/`) — profit (static), stock count, pricing, eBay listings, and analytics tiles. Every tile except Profit links to its page.
+- **Launch** (`/`) — a bento grid: Profit is a static 2×2 anchor that leads nowhere, Stock is a wide tile, Pricing and eBay are small, and Analytics runs the full width. Every tile except Profit links to its page.
 - **Stock** (`/stock`) — in-stock / sold laptop lists with a Reset → Cleaned → Prepared → Listed status checklist per laptop.
 - **Stock → Add / Edit** — the spec form branches on Apple vs. Windows: Apple gets Battery Health, Windows gets Manufacturer + Resolution; both share Year/Processor/RAM/Storage/Cycle Count/Model Number/Charger/Source/Notes/Pricing.
 - **Pricing** (`/pricing`) — lists laptops in the "Prepared" stage; "Run AI Price Check" calls Claude with the web search tool to find comparable eBay sold listings and stores the result.
 - **Analytics** (`/analytics`) — revenue/profit, sell-through, and "what sells better" breakdowns by brand and processor.
 - **eBay Listings** (`/ebay`) — your live active eBay listings, once eBay is connected.
 - **Settings** (`/settings`) — Anthropic API key, and eBay App ID / Cert ID / Dev ID / RuName + environment.
+
+## Theme
+
+"Megacorp" — a red-on-black corporate terminal look, defined entirely in `app/globals.css`:
+
+- **Chrome**: a fixed noise/flicker overlay, a scanline that sweeps the viewport, and a hazard stripe under the nav.
+- **Idle glitch**: page headings and the wordmark slice apart and throw cyan/red ghost copies on their own clocks (7.3s / 9.1s / 11.7s) so they never fire in sync. Driven by `<GlitchText>`, which feeds the ghosts through `data-text`.
+- **Hover glitch**: each tile carries one of five burst signatures (`corp-sig-a` … `corp-sig-e`) that fires on hover-in. Underneath, three sustained layers — ghost drift, a tear band, and a brightness hum — run on free-running, co-prime clocks and are only *revealed* on hover, never restarted. That's why no two hovers land on the same frame.
+- **Motion off**: everything is disabled under `prefers-reduced-motion: reduce`.
 
 ## Configuring the AI pricing agent
 

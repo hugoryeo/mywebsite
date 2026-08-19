@@ -1,137 +1,519 @@
 @import "tailwindcss";
 
+/* ============================================================
+   MEGACORP — red/black corporate terminal
+   ============================================================ */
 :root {
-  --background: #eef1f8;
-  --foreground: #0f1c3f;
+  /* renders native form controls (checkboxes, selects, spinners) dark */
+  color-scheme: dark;
 
-  --color-navy-950: #070d24;
-  --color-navy-900: #0c1638;
-  --color-navy-800: #122052;
-  --color-navy-700: #182c6b;
-  --color-navy-600: #1f3a89;
-  --color-navy-500: #2a4bab;
-  --color-navy-400: #3f63c9;
-  --color-navy-300: #7893dd;
-  --color-navy-200: #b3c2ec;
-  --color-navy-100: #dde5f7;
-  --color-navy-50: #f4f7fd;
+  --background: #0a0706;
+  --foreground: #f2ece6;
+
+  --color-corp-red: #e2231a;
+  --color-corp-red-bright: #ff5b4f;
+  --color-corp-red-dim: #5a1512;
+  --color-corp-cyan: #00e5ff;
+
+  --color-corp-950: #0a0706;
+  --color-corp-900: #130d0c;
+  --color-corp-800: #16100f;
+  --color-corp-700: #3a1f1c;
+  --color-corp-600: #5a4340;
+  --color-corp-500: #6b5450;
+  --color-corp-400: #8a6f6a;
+  --color-corp-300: #b09a95;
+  --color-corp-100: #f2ece6;
+
+  --corp-edge: rgba(226, 35, 26, 0.28);
+  --corp-edge-soft: rgba(226, 35, 26, 0.16);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-navy-950: var(--color-navy-950);
-  --color-navy-900: var(--color-navy-900);
-  --color-navy-800: var(--color-navy-800);
-  --color-navy-700: var(--color-navy-700);
-  --color-navy-600: var(--color-navy-600);
-  --color-navy-500: var(--color-navy-500);
-  --color-navy-400: var(--color-navy-400);
-  --color-navy-300: var(--color-navy-300);
-  --color-navy-200: var(--color-navy-200);
-  --color-navy-100: var(--color-navy-100);
-  --color-navy-50: var(--color-navy-50);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-corp-red: var(--color-corp-red);
+  --color-corp-red-bright: var(--color-corp-red-bright);
+  --color-corp-red-dim: var(--color-corp-red-dim);
+  --color-corp-cyan: var(--color-corp-cyan);
+  --color-corp-950: var(--color-corp-950);
+  --color-corp-900: var(--color-corp-900);
+  --color-corp-800: var(--color-corp-800);
+  --color-corp-700: var(--color-corp-700);
+  --color-corp-600: var(--color-corp-600);
+  --color-corp-500: var(--color-corp-500);
+  --color-corp-400: var(--color-corp-400);
+  --color-corp-300: var(--color-corp-300);
+  --color-corp-100: var(--color-corp-100);
+  --font-display: var(--font-oxanium);
+  --font-brand: var(--font-michroma);
+  --font-mono: var(--font-plex-mono);
+  --font-sans: var(--font-plex-mono);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  font-family: var(--font-plex-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+::selection { background: var(--color-corp-red); color: #fff; }
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--color-corp-900); }
+::-webkit-scrollbar-thumb { background: var(--color-corp-700); }
+::-webkit-scrollbar-thumb:hover { background: var(--color-corp-red-dim); }
+
+/* ============================================================
+   AMBIENT MOTION
+   ============================================================ */
+@keyframes corp-scan {
+  0% { transform: translateY(-12vh); }
+  100% { transform: translateY(112vh); }
+}
+@keyframes corp-flicker {
+  0%, 96%, 100% { opacity: 0.05; }
+  97% { opacity: 0.14; }
+  98% { opacity: 0.03; }
+  99% { opacity: 0.10; }
+}
+@keyframes corp-pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+/* ============================================================
+   IDLE HEADER GLITCH
+   ============================================================ */
+@keyframes corp-idle-slice {
+  0%, 89%, 100% { clip-path: inset(0 0 0 0); transform: translate(0, 0); }
+  90%   { clip-path: inset(8% 0 66% 0);  transform: translate(-5px, 0); }
+  91.5% { clip-path: inset(56% 0 12% 0); transform: translate(5px, 0); }
+  93%   { clip-path: inset(30% 0 44% 0); transform: translate(-3px, 1px); }
+  94.5% { clip-path: inset(72% 0 6% 0);  transform: translate(3px, -1px); }
+  96%   { clip-path: inset(0 0 0 0);     transform: translate(0, 0); }
+}
+@keyframes corp-ghost-cyan {
+  0%, 88%, 100% { opacity: 0; transform: translate(0, 0); }
+  89% { opacity: 0.9; transform: translate(-4px, -1px); }
+  92% { opacity: 0.7; transform: translate(3px, 1px); }
+  95% { opacity: 0.8; transform: translate(-2px, 0); }
+  97% { opacity: 0; transform: translate(0, 0); }
+}
+@keyframes corp-ghost-red {
+  0%, 88%, 100% { opacity: 0; transform: translate(0, 0); }
+  89% { opacity: 0.9; transform: translate(4px, 1px); }
+  92% { opacity: 0.7; transform: translate(-3px, -1px); }
+  95% { opacity: 0.8; transform: translate(2px, 0); }
+  97% { opacity: 0; transform: translate(0, 0); }
+}
+
+/* ============================================================
+   HOVER BURST — five slice signatures, one per tile
+   ============================================================ */
+@keyframes corp-burst-a {
+  0%   { clip-path: inset(0 0 0 0);     transform: translate(0, 0); }
+  12%  { clip-path: inset(12% 0 60% 0); transform: translate(-8px, 1px); }
+  24%  { clip-path: inset(58% 0 8% 0);  transform: translate(7px, -1px); }
+  38%  { clip-path: inset(30% 0 42% 0); transform: translate(-5px, 0); }
+  52%  { clip-path: inset(76% 0 4% 0);  transform: translate(6px, 2px); }
+  68%  { clip-path: inset(4% 0 78% 0);  transform: translate(-3px, -2px); }
+  82%  { clip-path: inset(44% 0 26% 0); transform: translate(2px, 0); }
+  100% { clip-path: inset(0 0 0 0);     transform: translate(0, 0); }
+}
+@keyframes corp-burst-b {
+  0%   { clip-path: inset(0 0 0 0);     transform: translate(0, 0) skewX(0deg); }
+  10%  { clip-path: inset(48% 0 34% 0); transform: translate(11px, 0) skewX(-6deg); }
+  22%  { clip-path: inset(6% 0 80% 0);  transform: translate(-9px, 2px) skewX(4deg); }
+  31%  { clip-path: inset(0 0 0 0);     transform: translate(2px, -3px) skewX(0deg); }
+  46%  { clip-path: inset(66% 0 14% 0); transform: translate(-7px, 0) skewX(5deg); }
+  60%  { clip-path: inset(22% 0 52% 0); transform: translate(8px, 1px) skewX(-3deg); }
+  100% { clip-path: inset(0 0 0 0);     transform: translate(0, 0) skewX(0deg); }
+}
+@keyframes corp-burst-c {
+  0%   { clip-path: inset(0 0 0 0);     transform: translate(0, 0) scaleY(1); }
+  8%   { clip-path: inset(0 0 0 0);     transform: translate(0, 0) scaleY(1.16); }
+  18%  { clip-path: inset(70% 0 8% 0);  transform: translate(-12px, 0) scaleY(1); }
+  27%  { clip-path: inset(18% 0 62% 0); transform: translate(10px, -2px) scaleY(0.9); }
+  40%  { clip-path: inset(40% 0 38% 0); transform: translate(-4px, 3px) scaleY(1); }
+  55%  { clip-path: inset(2% 0 88% 0);  transform: translate(5px, 0) scaleY(1.1); }
+  72%  { clip-path: inset(0 0 0 0);     transform: translate(-2px, 0) scaleY(1); }
+  100% { clip-path: inset(0 0 0 0);     transform: translate(0, 0) scaleY(1); }
+}
+@keyframes corp-burst-d {
+  0%   { clip-path: inset(0 0 0 0);     transform: translate(0, 0); }
+  6%   { clip-path: inset(34% 0 56% 0); transform: translate(14px, 0); }
+  14%  { clip-path: inset(0 0 0 0);     transform: translate(-2px, 0); }
+  26%  { clip-path: inset(80% 0 2% 0);  transform: translate(-13px, 1px); }
+  35%  { clip-path: inset(10% 0 72% 0); transform: translate(9px, -2px); }
+  48%  { clip-path: inset(0 0 0 0);     transform: translate(0, 4px); }
+  63%  { clip-path: inset(52% 0 30% 0); transform: translate(-6px, 0); }
+  79%  { clip-path: inset(26% 0 60% 0); transform: translate(4px, 0); }
+  100% { clip-path: inset(0 0 0 0);     transform: translate(0, 0); }
+}
+@keyframes corp-burst-e {
+  0%   { clip-path: inset(0 0 0 0);     transform: translate(0, 0); }
+  9%   { clip-path: inset(62% 0 20% 0); transform: translate(-10px, 2px); }
+  17%  { clip-path: inset(24% 0 58% 0); transform: translate(12px, 0); }
+  29%  { clip-path: inset(4% 0 84% 0);  transform: translate(-6px, -3px); }
+  41%  { clip-path: inset(46% 0 36% 0); transform: translate(7px, 1px); }
+  58%  { clip-path: inset(84% 0 2% 0);  transform: translate(-9px, 0); }
+  74%  { clip-path: inset(14% 0 68% 0); transform: translate(3px, 2px); }
+  100% { clip-path: inset(0 0 0 0);     transform: translate(0, 0); }
+}
+
+/* ============================================================
+   SUSTAINED — free-running clocks, revealed (never restarted)
+   on hover, so every hover lands on a different frame
+   ============================================================ */
+@keyframes corp-drift-cyan {
+  0%, 100% { transform: translate(0, 0); opacity: 0; }
+  11% { transform: translate(-5px, 0);   opacity: 0.85; }
+  13% { transform: translate(3px, 1px);  opacity: 0; }
+  37% { transform: translate(0, 0);      opacity: 0; }
+  39% { transform: translate(6px, -1px); opacity: 0.9; }
+  42% { transform: translate(-2px, 0);   opacity: 0; }
+  64% { transform: translate(0, 0);      opacity: 0; }
+  66% { transform: translate(-7px, 2px); opacity: 0.75; }
+  69% { transform: translate(2px, 0);    opacity: 0; }
+  88% { transform: translate(4px, 0);    opacity: 0.8; }
+  91% { transform: translate(0, 0);      opacity: 0; }
+}
+@keyframes corp-drift-red {
+  0%, 100% { transform: translate(0, 0); opacity: 0; }
+  11% { transform: translate(5px, 0);     opacity: 0.85; }
+  13% { transform: translate(-3px, -1px); opacity: 0; }
+  37% { transform: translate(0, 0);       opacity: 0; }
+  39% { transform: translate(-6px, 1px);  opacity: 0.9; }
+  42% { transform: translate(2px, 0);     opacity: 0; }
+  64% { transform: translate(0, 0);       opacity: 0; }
+  66% { transform: translate(7px, -2px);  opacity: 0.75; }
+  69% { transform: translate(-2px, 0);    opacity: 0; }
+  88% { transform: translate(-4px, 0);    opacity: 0.8; }
+  91% { transform: translate(0, 0);       opacity: 0; }
+}
+@keyframes corp-tear {
+  0%, 100% { opacity: 0; top: 14%; height: 7px; }
+  6%  { opacity: 1; top: 14%; }
+  9%  { opacity: 0; }
+  28% { opacity: 0; top: 58%; height: 4px; }
+  31% { opacity: 1; top: 58%; }
+  34% { opacity: 0; }
+  53% { opacity: 0; top: 33%; height: 11px; }
+  55% { opacity: 1; top: 33%; }
+  58% { opacity: 0; }
+  77% { opacity: 0; top: 76%; height: 3px; }
+  79% { opacity: 1; top: 76%; }
+  83% { opacity: 0; }
+}
+@keyframes corp-hum {
+  0%, 100% { filter: none; }
+  17% { filter: none; }
+  19% { filter: brightness(1.35) contrast(1.3); }
+  21% { filter: brightness(0.82); }
+  23% { filter: none; }
+  58% { filter: none; }
+  60% { filter: brightness(1.22); }
+  62% { filter: none; }
+  86% { filter: brightness(0.88) contrast(1.15); }
+  89% { filter: none; }
 }
 
 @layer components {
-  /* A raised, "3D" white panel. Used for every launch/page container. */
-  .panel-3d {
-    background: linear-gradient(180deg, #ffffff 0%, #f7f9fd 100%);
-    border: 1px solid var(--color-navy-100);
-    border-radius: 1rem;
-    box-shadow:
-      0 1px 0 rgba(255, 255, 255, 0.8) inset,
-      0 10px 20px -12px rgba(15, 28, 63, 0.25),
-      0 2px 4px rgba(15, 28, 63, 0.08);
-    transition:
-      transform 180ms ease,
-      box-shadow 180ms ease;
+  /* ---------- page chrome ---------- */
+  .corp-noise {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    mix-blend-mode: overlay;
+    z-index: 40;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    animation: corp-flicker 3.4s steps(1) infinite;
+  }
+  .corp-scanline {
+    position: fixed;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 90px;
+    pointer-events: none;
+    z-index: 30;
+    background: linear-gradient(
+      180deg,
+      transparent,
+      rgba(226, 35, 26, 0.10) 45%,
+      rgba(255, 255, 255, 0.06) 50%,
+      rgba(226, 35, 26, 0.10) 55%,
+      transparent
+    );
+    animation: corp-scan 5.5s linear infinite;
+  }
+  .corp-hazard {
+    height: 6px;
+    background: repeating-linear-gradient(-45deg, #e2231a 0 14px, #16100f 14px 28px);
   }
 
-  /* Interactive variant: lifts and deepens its shadow on hover, for any
-     container the user can click into. */
-  .panel-3d-interactive {
+  /* ---------- ghost-text rig ---------- */
+  .gx {
+    position: relative;
+    display: inline-block;
+  }
+  .gx::before,
+  .gx::after {
+    content: attr(data-text);
+    position: absolute;
+    left: 0;
+    top: 0;
+    pointer-events: none;
+    white-space: pre;
+  }
+  .gx::before { color: var(--color-corp-cyan); }
+  .gx::after { color: var(--color-corp-red); }
+
+  .gx-idle { animation: corp-idle-slice 9.1s steps(1) infinite; }
+  .gx-idle::before { animation: corp-ghost-cyan 9.1s steps(1) infinite; }
+  .gx-idle::after { animation: corp-ghost-red 9.1s steps(1) infinite; }
+  .gx-t1, .gx-t1::before, .gx-t1::after { animation-duration: 7.3s; }
+  .gx-t3, .gx-t3::before, .gx-t3::after { animation-duration: 11.7s; }
+
+  /* ---------- panels ---------- */
+  .corp-panel {
+    position: relative;
+    background: linear-gradient(160deg, rgba(226, 35, 26, 0.05), rgba(19, 13, 12, 0.6));
+    border: 1px solid var(--corp-edge);
+    clip-path: polygon(
+      18px 0,
+      100% 0,
+      100% calc(100% - 18px),
+      calc(100% - 18px) 100%,
+      0 100%,
+      0 18px
+    );
+  }
+  .corp-panel-locked { border-style: dashed; }
+
+  .corp-bracket {
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    border: 1.5px solid var(--color-corp-red);
+    opacity: 0.5;
+    pointer-events: none;
+  }
+  .corp-bracket-tl { top: 6px; left: 6px; border-right: none; border-bottom: none; }
+  .corp-bracket-br { bottom: 6px; right: 6px; border-left: none; border-top: none; }
+
+  /* ---------- interactive tile ---------- */
+  .corp-tile {
+    overflow: hidden;
     cursor: pointer;
+    transition: border-color 150ms ease, transform 150ms ease;
   }
-  .panel-3d-interactive:hover,
-  .panel-3d-interactive:focus-visible {
-    transform: translateY(-6px);
-    box-shadow:
-      0 1px 0 rgba(255, 255, 255, 0.8) inset,
-      0 24px 34px -16px rgba(15, 28, 63, 0.35),
-      0 6px 10px rgba(15, 28, 63, 0.12);
+  .corp-tile::before {
+    content: "";
+    position: absolute;
+    left: -10%;
+    right: -10%;
+    top: 30%;
+    height: 6px;
+    z-index: 2;
+    background: linear-gradient(
+      90deg,
+      rgba(0, 229, 255, 0.4),
+      rgba(226, 35, 26, 0.55) 55%,
+      rgba(0, 229, 255, 0.28)
+    );
+    mix-blend-mode: screen;
+    pointer-events: none;
+    visibility: hidden;
+    animation: corp-tear 3.1s steps(1) infinite;
   }
-  .panel-3d-interactive:active {
-    transform: translateY(-2px);
+  .corp-tile:hover,
+  .corp-tile:focus-visible {
+    transform: translateY(-4px);
+    border-color: var(--color-corp-red);
+    outline: none;
+    animation: corp-hum 3.7s steps(1) infinite;
+  }
+  .corp-tile:hover::before,
+  .corp-tile:focus-visible::before { visibility: visible; }
+  .corp-tile:hover .corp-bracket,
+  .corp-tile:focus-visible .corp-bracket { opacity: 1; }
+
+  /* burst fires on the tile's direct children */
+  .corp-tile:hover > *,
+  .corp-tile:focus-visible > * {
+    animation: corp-burst-a 0.42s steps(1) both;
+  }
+  .corp-tile > .corp-bracket { animation: none !important; }
+
+  /* per-tile signatures: different burst, different sustained clocks */
+  .corp-sig-b::before { animation-duration: 4.3s; }
+  .corp-sig-b:hover, .corp-sig-b:focus-visible { animation-duration: 2.9s; }
+  .corp-sig-b:hover > *, .corp-sig-b:focus-visible > * {
+    animation-name: corp-burst-b;
+    animation-duration: 0.36s;
+  }
+  .corp-sig-c::before { animation-duration: 2.7s; }
+  .corp-sig-c:hover, .corp-sig-c:focus-visible { animation-duration: 4.7s; }
+  .corp-sig-c:hover > *, .corp-sig-c:focus-visible > * {
+    animation-name: corp-burst-c;
+    animation-duration: 0.48s;
+  }
+  .corp-sig-d::before { animation-duration: 5.3s; }
+  .corp-sig-d:hover, .corp-sig-d:focus-visible { animation-duration: 3.3s; }
+  .corp-sig-d:hover > *, .corp-sig-d:focus-visible > * {
+    animation-name: corp-burst-d;
+    animation-duration: 0.4s;
+  }
+  .corp-sig-e::before { animation-duration: 3.1s; }
+  .corp-sig-e:hover > *, .corp-sig-e:focus-visible > * {
+    animation-name: corp-burst-e;
+    animation-duration: 0.45s;
   }
 
-  /* Static variant (e.g. the Profit tile): same 3D look, no hover affordance. */
-  .panel-3d-static {
-    cursor: default;
-  }
+  /* value ghosts inside a tile: clocks never stop, only revealed */
+  .corp-tile .gx-hover::before { animation: corp-drift-cyan 3.9s steps(1) infinite; visibility: hidden; }
+  .corp-tile .gx-hover::after { animation: corp-drift-red 3.9s steps(1) infinite; visibility: hidden; }
+  .corp-tile:hover .gx-hover::before,
+  .corp-tile:hover .gx-hover::after,
+  .corp-tile:focus-visible .gx-hover::before,
+  .corp-tile:focus-visible .gx-hover::after { visibility: visible; }
+  .corp-sig-b .gx-hover::before, .corp-sig-b .gx-hover::after { animation-duration: 5.1s; }
+  .corp-sig-c .gx-hover::before, .corp-sig-c .gx-hover::after { animation-duration: 2.9s; }
+  .corp-sig-d .gx-hover::before, .corp-sig-d .gx-hover::after { animation-duration: 6.7s; }
 
-  .btn-navy {
-    background: linear-gradient(180deg, var(--color-navy-600) 0%, var(--color-navy-800) 100%);
-    color: white;
-    border-radius: 0.6rem;
-    box-shadow:
-      0 1px 0 rgba(255, 255, 255, 0.15) inset,
-      0 6px 14px -6px rgba(15, 28, 63, 0.5);
-    transition:
-      transform 150ms ease,
-      box-shadow 150ms ease,
-      filter 150ms ease;
+  /* ---------- controls ---------- */
+  .btn-corp {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: var(--color-corp-red);
+    color: #0a0706;
+    font-family: var(--font-oxanium), sans-serif;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border: 1px solid var(--color-corp-red);
+    clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+    transition: background 150ms ease, color 150ms ease, box-shadow 150ms ease;
   }
-  .btn-navy:hover {
-    filter: brightness(1.08);
-    transform: translateY(-2px);
-    box-shadow:
-      0 1px 0 rgba(255, 255, 255, 0.15) inset,
-      0 10px 20px -8px rgba(15, 28, 63, 0.55);
+  .btn-corp:hover {
+    background: var(--color-corp-red-bright);
+    box-shadow: 0 0 18px rgba(226, 35, 26, 0.5);
   }
-  .btn-navy:active {
-    transform: translateY(0);
-  }
-  .btn-navy:disabled {
-    filter: grayscale(0.4);
-    opacity: 0.6;
+  .btn-corp:disabled {
+    background: transparent;
+    color: var(--color-corp-500);
+    border-color: var(--color-corp-700);
     cursor: not-allowed;
-    transform: none;
+    box-shadow: none;
   }
 
-  .btn-outline-navy {
-    background: white;
-    color: var(--color-navy-700);
-    border: 1px solid var(--color-navy-200);
-    border-radius: 0.6rem;
-    transition:
-      transform 150ms ease,
-      box-shadow 150ms ease,
-      background 150ms ease;
+  .btn-corp-ghost {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: transparent;
+    color: var(--color-corp-300);
+    font-family: var(--font-oxanium), sans-serif;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border: 1px solid var(--corp-edge);
+    clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+    transition: color 150ms ease, border-color 150ms ease, background 150ms ease;
   }
-  .btn-outline-navy:hover {
-    background: var(--color-navy-50);
-    box-shadow: 0 6px 14px -8px rgba(15, 28, 63, 0.35);
-    transform: translateY(-1px);
+  .btn-corp-ghost:hover {
+    color: #fff;
+    border-color: var(--color-corp-red);
+    background: rgba(226, 35, 26, 0.08);
   }
 
-  .input-navy {
-    background: white;
-    border: 1px solid var(--color-navy-200);
-    border-radius: 0.5rem;
+  .btn-corp-danger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    color: var(--color-corp-red);
+    font-family: var(--font-oxanium), sans-serif;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border: 1px solid var(--color-corp-red-dim);
+    clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+    transition: border-color 150ms ease, background 150ms ease;
+  }
+  .btn-corp-danger:hover {
+    border-color: var(--color-corp-red);
+    background: rgba(226, 35, 26, 0.12);
+  }
+
+  .input-corp {
+    background: rgba(10, 7, 6, 0.7);
+    border: 1px solid var(--corp-edge);
     color: var(--foreground);
-    box-shadow: 0 1px 2px rgba(15, 28, 63, 0.06) inset;
+    font-family: var(--font-plex-mono), ui-monospace, monospace;
+    transition: border-color 150ms ease, box-shadow 150ms ease;
   }
-  .input-navy:focus {
-    outline: 2px solid var(--color-navy-400);
-    outline-offset: 1px;
+  .input-corp::placeholder { color: var(--color-corp-600); }
+  .input-corp:focus {
+    outline: none;
+    border-color: var(--color-corp-red);
+    box-shadow: 0 0 0 1px rgba(226, 35, 26, 0.35), inset 0 0 14px rgba(226, 35, 26, 0.08);
   }
+  .input-corp option { background: var(--color-corp-900); color: var(--foreground); }
+
+  .corp-label {
+    font-family: var(--font-oxanium), sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-corp-400);
+  }
+
+  .corp-heading {
+    font-family: var(--font-oxanium), sans-serif;
+    font-weight: 800;
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
+    color: #fff;
+  }
+
+  /* status chip in the prep checklist */
+  .corp-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-oxanium), sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border: 1px solid var(--corp-edge);
+    color: var(--color-corp-400);
+    background: transparent;
+    padding: 5px 12px;
+    clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+    cursor: pointer;
+    transition: color 150ms ease, border-color 150ms ease, background 150ms ease;
+  }
+  .corp-chip:hover { color: #fff; border-color: var(--color-corp-red); }
+  .corp-chip-on {
+    background: var(--color-corp-red);
+    border-color: var(--color-corp-red);
+    color: #0a0706;
+  }
+  .corp-chip-on:hover { background: var(--color-corp-red-bright); color: #0a0706; }
+}
+
+/* ============================================================
+   MOTION OFF
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; }
+  .corp-tile::before { visibility: hidden !important; }
 }

@@ -15,17 +15,15 @@ export default function StatusChecklist({
   const [isPending, startTransition] = useTransition();
 
   return (
-    <div className={`flex flex-wrap gap-${compact ? "1.5" : "3"}`}>
+    <div className={`flex flex-wrap ${compact ? "gap-1.5" : "gap-2.5"}`}>
       {STATUS_STAGES.map(({ key, label }) => {
         const checked = laptop[key];
         return (
           <label
             key={key}
-            className={`flex cursor-pointer items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold transition-colors ${
-              checked
-                ? "border-navy-600 bg-navy-600 text-white"
-                : "border-navy-200 bg-white text-navy-500 hover:border-navy-400"
-            } ${isPending ? "opacity-60" : ""}`}
+            className={`corp-chip ${checked ? "corp-chip-on" : ""} ${
+              isPending ? "opacity-60" : ""
+            }`}
           >
             <input
               type="checkbox"
@@ -38,8 +36,7 @@ export default function StatusChecklist({
                 });
               }}
             />
-            {checked ? "✓ " : ""}
-            {label}
+            {checked ? `✓ ${label}` : label}
           </label>
         );
       })}

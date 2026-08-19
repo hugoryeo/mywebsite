@@ -2,6 +2,8 @@ import Link from "next/link";
 import { getEbayCredentials, getMyActiveListings } from "@/app/lib/ebay";
 import { getEbayToken } from "@/app/lib/settings";
 import { money } from "@/app/lib/laptop";
+import GlitchText from "@/app/components/GlitchText";
+import { Panel } from "@/app/components/Tile";
 
 export const dynamic = "force-dynamic";
 
@@ -25,64 +27,85 @@ export default async function EbayPage({
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-7">
       <div>
-        <h1 className="text-2xl font-bold text-navy-900">eBay Listings</h1>
-        <p className="mt-1 text-navy-400">Your live active eBay listings, pulled directly from eBay.</p>
+        <GlitchText
+          text="eBay Listings"
+          as="h1"
+          className="corp-heading text-[38px] leading-none"
+        />
+        <p className="mt-2 text-[13px] text-corp-400">
+          Your live active eBay listings, pulled directly from eBay.
+        </p>
       </div>
 
       {ebay_connected && (
-        <div className="panel-3d panel-3d-static border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
+        <div className="corp-panel border-corp-red/50 p-4 text-[13px] text-corp-300">
           eBay account connected successfully.
         </div>
       )}
       {ebay_error && (
-        <div className="panel-3d panel-3d-static border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">
+        <div className="corp-panel border-corp-red p-4 text-[13px] text-corp-red-bright">
           {ebay_error}
         </div>
       )}
 
       {!creds ? (
-        <div className="panel-3d panel-3d-static p-8 text-center text-navy-400">
+        <Panel className="text-center text-[13px] text-corp-500">
           eBay isn&rsquo;t configured yet.{" "}
-          <Link href="/settings" className="font-semibold text-navy-600 underline">
+          <Link
+            href="/settings"
+            className="font-semibold text-corp-red underline hover:text-corp-red-bright"
+          >
             Add your eBay App ID, Cert ID, and RuName in Settings
           </Link>{" "}
           to get started.
-        </div>
+        </Panel>
       ) : !token ? (
-        <div className="panel-3d panel-3d-static flex flex-col items-center gap-4 p-8 text-center text-navy-400">
+        <Panel className="flex flex-col items-center gap-5 py-8 text-center text-[13px] text-corp-500">
           <p>Your eBay app credentials are set, but no eBay account is connected yet.</p>
-          <a href="/api/ebay/authorize" className="btn-navy px-5 py-2.5 text-sm font-semibold">
+          <a href="/api/ebay/authorize" className="btn-corp px-5 py-2.5 text-xs">
             Connect eBay Account
           </a>
-        </div>
+        </Panel>
       ) : fetchError ? (
-        <div className="panel-3d panel-3d-static border border-rose-200 bg-rose-50 p-6 text-sm text-rose-800">
-          <p className="font-semibold">Couldn&rsquo;t load your listings.</p>
-          <p className="mt-1">{fetchError}</p>
+        <div className="corp-panel border-corp-red p-6 text-[13px]">
+          <p className="corp-heading text-base text-corp-red-bright">
+            Couldn&rsquo;t load your listings
+          </p>
+          <p className="mt-2 text-corp-300">{fetchError}</p>
         </div>
       ) : listings.length === 0 ? (
-        <div className="panel-3d panel-3d-static p-8 text-center text-navy-400">
+        <Panel className="text-center text-[13px] text-corp-500">
           No active eBay listings found.
-        </div>
+        </Panel>
       ) : (
         <div className="flex flex-col gap-3">
-          {listings.map((item) => (
+          {listings.map((item, i) => (
             <a
               key={item.itemId}
               href={item.viewUrl ?? "#"}
               target="_blank"
               rel="noopener noreferrer"
-              className="panel-3d panel-3d-interactive flex items-center justify-between gap-4 p-4"
+              className={`corp-panel corp-tile flex items-center justify-between gap-4 p-4 ${
+                ["", "corp-sig-b", "corp-sig-c", "corp-sig-d", "corp-sig-e"][i % 5]
+              }`}
             >
+              <span className="corp-bracket corp-bracket-tl" aria-hidden="true" />
+              <span className="corp-bracket corp-bracket-br" aria-hidden="true" />
               <div>
-                <div className="font-semibold text-navy-900">{item.title}</div>
-                <div className="text-xs text-navy-400">Item #{item.itemId}</div>
+                <div className="font-display text-[15px] font-semibold text-white">
+                  {item.title}
+                </div>
+                <div className="text-[11px] text-corp-500">Item #{item.itemId}</div>
               </div>
               <div className="text-right">
-                <div className="font-bold text-navy-900">{money(item.price)}</div>
-                {item.quantity != null && <div className="text-xs text-navy-400">qty {item.quantity}</div>}
+                <div className="font-display text-[18px] font-bold text-white tabular-nums">
+                  {money(item.price)}
+                </div>
+                {item.quantity != null && (
+                  <div className="text-[11px] text-corp-500">qty {item.quantity}</div>
+                )}
               </div>
             </a>
           ))}

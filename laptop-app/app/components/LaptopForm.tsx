@@ -29,7 +29,7 @@ function Field({
 }) {
   return (
     <div className={`flex flex-col gap-1 ${span ? "sm:col-span-2" : ""}`}>
-      <label htmlFor={htmlFor} className="text-xs font-semibold tracking-wide text-navy-500 uppercase">
+      <label htmlFor={htmlFor} className="corp-label">
         {label}
       </label>
       {children}
@@ -37,7 +37,7 @@ function Field({
   );
 }
 
-const inputClass = "input-navy w-full px-3 py-2 text-sm";
+const inputClass = "input-corp w-full px-3 py-2 text-sm";
 
 export default function LaptopForm({
   action,
@@ -52,8 +52,8 @@ export default function LaptopForm({
 
   return (
     <form action={action} className="flex flex-col gap-6">
-      <div className="panel-3d panel-3d-static p-6">
-        <h2 className="mb-4 text-lg font-bold text-navy-900">Operating System</h2>
+      <div className="corp-panel p-6">
+        <h2 className="corp-heading mb-4 text-lg">Operating System</h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Brand" htmlFor="brandOs">
             <select
@@ -87,8 +87,8 @@ export default function LaptopForm({
         </div>
       </div>
 
-      <div className="panel-3d panel-3d-static p-6">
-        <h2 className="mb-4 text-lg font-bold text-navy-900">Specifications</h2>
+      <div className="corp-panel p-6">
+        <h2 className="corp-heading mb-4 text-lg">Specifications</h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <Field label="Year" htmlFor="year">
             <input id="year" name="year" type="number" min="1990" max="2100" defaultValue={initial?.year ?? ""} className={inputClass} placeholder="e.g. 2021" />
@@ -119,16 +119,16 @@ export default function LaptopForm({
             <input id="modelNumber" name="modelNumber" defaultValue={initial?.modelNumber ?? ""} className={inputClass} placeholder="e.g. A2338" />
           </Field>
           <Field label="Charger Included" htmlFor="hasCharger">
-            <label className="flex h-[38px] items-center gap-2 rounded-md border border-navy-200 bg-white px-3 text-sm">
-              <input id="hasCharger" name="hasCharger" type="checkbox" defaultChecked={initial?.hasCharger ?? false} className="h-4 w-4 accent-navy-600" />
+            <label className="input-corp flex h-[38px] cursor-pointer items-center gap-2 px-3 text-sm">
+              <input id="hasCharger" name="hasCharger" type="checkbox" defaultChecked={initial?.hasCharger ?? false} className="h-4 w-4 accent-[color:var(--color-corp-red)]" />
               Included
             </label>
           </Field>
         </div>
       </div>
 
-      <div className="panel-3d panel-3d-static p-6">
-        <h2 className="mb-4 text-lg font-bold text-navy-900">Origin &amp; Notes</h2>
+      <div className="corp-panel p-6">
+        <h2 className="corp-heading mb-4 text-lg">Origin &amp; Notes</h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Where did this laptop come from?" htmlFor="source" span>
             <input id="source" name="source" defaultValue={initial?.source ?? ""} className={inputClass} placeholder="e.g. Trade-in, auction lot #4, supplier name" />
@@ -139,8 +139,8 @@ export default function LaptopForm({
         </div>
       </div>
 
-      <div className="panel-3d panel-3d-static p-6">
-        <h2 className="mb-4 text-lg font-bold text-navy-900">Pricing</h2>
+      <div className="corp-panel p-6">
+        <h2 className="corp-heading mb-4 text-lg">Pricing</h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Cost (£)" htmlFor="cost">
             <input id="cost" name="cost" type="number" min="0" step="0.01" defaultValue={initial?.cost ?? ""} className={inputClass} placeholder="0.00" />
@@ -151,7 +151,7 @@ export default function LaptopForm({
         </div>
       </div>
 
-      <button type="submit" className="btn-navy self-start px-6 py-2.5 text-sm font-semibold">
+      <button type="submit" className="btn-corp self-start px-6 py-2.5 text-xs">
         {submitLabel}
       </button>
     </form>

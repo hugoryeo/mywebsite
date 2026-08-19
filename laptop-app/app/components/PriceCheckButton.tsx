@@ -45,21 +45,21 @@ export default function PriceCheckButton({ laptopId }: { laptopId: string }) {
         type="button"
         onClick={run}
         disabled={loading}
-        className="btn-navy self-start px-4 py-2 text-sm font-semibold"
+        className="btn-corp self-start px-4 py-2 text-xs"
       >
-        {loading ? "Searching eBay sold listings…" : "🔎 Run AI Price Check"}
+        {loading ? "Scanning sold listings…" : "Run AI Price Check"}
       </button>
-      {error && <p className="text-sm font-medium text-rose-600">{error}</p>}
+      {error && <p className="text-[12px] font-medium text-corp-red">{error}</p>}
       {result && (
-        <div className="rounded-lg border border-navy-100 bg-navy-50 p-4">
-          <div className="text-xl font-bold text-navy-900">{money(result.averagePrice)}</div>
+        <div className="border border-[color:var(--corp-edge-soft)] bg-corp-900/60 p-4">
+          <div className="font-display text-[22px] font-bold text-white">{money(result.averagePrice)}</div>
           {(result.lowPrice != null || result.highPrice != null) && (
-            <div className="text-sm text-navy-400">
+            <div className="text-[12px] text-corp-400">
               range {money(result.lowPrice)} – {money(result.highPrice)}
               {result.sampleSize ? ` · ${result.sampleSize} sold listings` : ""}
             </div>
           )}
-          <p className="mt-2 text-sm text-navy-700">{result.summary}</p>
+          <p className="mt-2 text-[13px] leading-relaxed text-corp-300">{result.summary}</p>
         </div>
       )}
     </div>

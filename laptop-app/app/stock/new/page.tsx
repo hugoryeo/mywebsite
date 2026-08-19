@@ -1,12 +1,13 @@
 import LaptopForm from "@/app/components/LaptopForm";
 import { createLaptop } from "@/app/lib/actions";
+import GlitchText from "@/app/components/GlitchText";
 
 export default function NewLaptopPage() {
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-7">
       <div>
-        <h1 className="text-2xl font-bold text-navy-900">Add Laptop</h1>
-        <p className="mt-1 text-navy-400">
+        <GlitchText text="Add Laptop" as="h1" className="corp-heading text-[38px] leading-none" />
+        <p className="mt-2 text-[13px] text-corp-400">
           Choose Apple or Windows — the fields below adjust to match.
         </p>
       </div>
