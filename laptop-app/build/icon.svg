@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512"><defs>
+<radialGradient id="glow" cx="50%" cy="34%" r="62%">
+  <stop offset="0%" stop-color="#6f8db3" stop-opacity="0.30"/>
+  <stop offset="55%" stop-color="#6f8db3" stop-opacity="0.07"/>
+  <stop offset="100%" stop-color="#6f8db3" stop-opacity="0"/>
+</radialGradient>
+<linearGradient id="metal" x1="0" y1="0" x2="0" y2="1">
+  <stop offset="0%" stop-color="#e7edf6"/>
+  <stop offset="48%" stop-color="#a6c0dd"/>
+  <stop offset="100%" stop-color="#6f8db3"/>
+</linearGradient>
+<clipPath id="squircle"><rect width="512" height="512" rx="114"/></clipPath>
+</defs>
+    
+<rect width="512" height="512" rx="114" fill="#06080b"/>
+<rect width="512" height="512" rx="114" fill="url(#glow)"/>
+
+    <g transform="translate(256 256)">
+      <path d="M0 -178 L116 -74 L116 74 L0 178 L-116 74 L-116 -74 Z" fill="url(#metal)"/>
+      <path d="M0 -178 L116 -74 L116 74 L0 178 L-116 74 L-116 -74 Z"
+            fill="none" stroke="#06080b" stroke-width="4"/>
+      <rect x="-13" y="-178" width="26" height="356" fill="#06080b"/>
+      <rect x="-116" y="-56" width="232" height="20" fill="#06080b"/>
+      <rect x="-116" y="36" width="232" height="20" fill="#06080b"/>
+    </g>
+    <path d="M46 92 L46 46 L92 46" fill="none" stroke="#2b3b4e" stroke-width="11" opacity="1"/><path d="M420 46 L466 46 L466 92" fill="none" stroke="#2b3b4e" stroke-width="11" opacity="1"/><path d="M466 420 L466 466 L420 466" fill="none" stroke="#2b3b4e" stroke-width="11" opacity="1"/><path d="M92 466 L46 466 L46 420" fill="none" stroke="#2b3b4e" stroke-width="11" opacity="1"/>
+  </svg>

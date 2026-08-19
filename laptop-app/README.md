@@ -107,8 +107,10 @@ which Next traces in for `next/image` and this app never uses, and strips the
 `.env` files Next copies in, which have no business in something you hand to
 someone else.
 
-The app icon is `build/icon.png`, carried over from the original tracker;
-replace that one file to change it.
+The app icon is `build/icon.png`, an original mark drawn in the Megacorp
+palette — a heavy symmetrical emblem, seams cut back to the background, framed
+by the same corner brackets the panels use. `build/icon.svg` is the source it
+was rendered from; re-render at 1024px and overwrite the PNG to change it.
 
 ## Pages
 
