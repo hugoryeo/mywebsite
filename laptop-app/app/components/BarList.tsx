@@ -16,7 +16,7 @@ export function BarList({
           </div>
           <div className="h-5 flex-1 border border-[color:var(--corp-edge-soft)] bg-corp-900">
             <div
-              className="h-full bg-gradient-to-r from-corp-red-dim to-corp-red"
+              className="h-full bg-gradient-to-r from-corp-accent-dim to-corp-accent"
               style={{ width: `${(Math.abs(r.value) / max) * 100}%` }}
             />
           </div>

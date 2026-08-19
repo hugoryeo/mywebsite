@@ -40,12 +40,12 @@ export default async function EbayPage({
       </div>
 
       {ebay_connected && (
-        <div className="corp-panel border-corp-red/50 p-4 text-[13px] text-corp-300">
+        <div className="corp-panel border-corp-accent/50 p-4 text-[13px] text-corp-300">
           eBay account connected successfully.
         </div>
       )}
       {ebay_error && (
-        <div className="corp-panel border-corp-red p-4 text-[13px] text-corp-red-bright">
+        <div className="corp-panel border-corp-accent p-4 text-[13px] text-corp-accent-bright">
           {ebay_error}
         </div>
       )}
@@ -55,7 +55,7 @@ export default async function EbayPage({
           eBay isn&rsquo;t configured yet.{" "}
           <Link
             href="/settings"
-            className="font-semibold text-corp-red underline hover:text-corp-red-bright"
+            className="font-semibold text-corp-accent underline hover:text-corp-accent-bright"
           >
             Add your eBay App ID, Cert ID, and RuName in Settings
           </Link>{" "}
@@ -69,8 +69,8 @@ export default async function EbayPage({
           </a>
         </Panel>
       ) : fetchError ? (
-        <div className="corp-panel border-corp-red p-6 text-[13px]">
-          <p className="corp-heading text-base text-corp-red-bright">
+        <div className="corp-panel border-corp-accent p-6 text-[13px]">
+          <p className="corp-heading text-base text-corp-accent-bright">
             Couldn&rsquo;t load your listings
           </p>
           <p className="mt-2 text-corp-300">{fetchError}</p>

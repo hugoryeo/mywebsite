@@ -33,7 +33,7 @@ export default async function SettingsPage({
       </div>
 
       {ebay_error && (
-        <div className="corp-panel border-corp-red p-4 text-[13px] text-corp-red-bright">
+        <div className="corp-panel border-corp-accent p-4 text-[13px] text-corp-accent-bright">
           {ebay_error}
         </div>
       )}
@@ -139,7 +139,7 @@ export default async function SettingsPage({
 
           <div className="mt-5 flex items-center gap-3 border-t border-[color:var(--corp-edge-soft)] pt-4">
             <span className="text-[12px] text-corp-400">
-              eBay account: {ebayToken ? <span className="font-semibold text-corp-red-bright">connected</span> : <span className="font-semibold text-corp-500">not connected</span>}
+              eBay account: {ebayToken ? <span className="font-semibold text-corp-accent-bright">connected</span> : <span className="font-semibold text-corp-500">not connected</span>}
             </span>
             {ebayToken && (
               <form action={disconnectEbay}>

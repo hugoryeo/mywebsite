@@ -7,35 +7,45 @@
   /* renders native form controls (checkboxes, selects, spinners) dark */
   color-scheme: dark;
 
-  --background: #0a0706;
-  --foreground: #f2ece6;
+  --background: #06080b;
+  --foreground: #e7edf6;
 
-  --color-corp-red: #e2231a;
-  --color-corp-red-bright: #ff5b4f;
-  --color-corp-red-dim: #5a1512;
-  --color-corp-cyan: #00e5ff;
+  /* greyish blue — muted steel, so it reads as a colour scheme rather than
+     a warning colour. -bright carries emphasis, -dim carries borders. */
+  --color-corp-accent: #6f8db3;
+  --color-corp-accent-bright: #a6c0dd;
+  --color-corp-accent-dim: #2b3b4e;
 
-  --color-corp-950: #0a0706;
-  --color-corp-900: #130d0c;
-  --color-corp-800: #16100f;
-  --color-corp-700: #3a1f1c;
-  --color-corp-600: #5a4340;
-  --color-corp-500: #6b5450;
-  --color-corp-400: #8a6f6a;
-  --color-corp-300: #b09a95;
-  --color-corp-100: #f2ece6;
+  /* the two halves of the glitch chromatic split — kept in the cool family */
+  --color-corp-ghost: #7fe0ff;
+  --color-corp-ghost-alt: #97a6ff;
 
-  --corp-edge: rgba(226, 35, 26, 0.28);
-  --corp-edge-soft: rgba(226, 35, 26, 0.16);
+  /* neutrals, biased blue so nothing reads as flat grey */
+  --color-corp-950: #06080b;
+  --color-corp-900: #0c1118;
+  --color-corp-800: #10161f;
+  --color-corp-700: #223041;
+  --color-corp-600: #3a4b60;
+  --color-corp-500: #56697f;
+  --color-corp-400: #7b8ea6;
+  --color-corp-300: #a7b8cd;
+  --color-corp-100: #e7edf6;
+
+  /* profit sign — the only place a non-blue hue is allowed */
+  --color-corp-pos: #6fd3ae;
+  --color-corp-neg: #e08c94;
+
+  --corp-edge: rgba(111, 141, 179, 0.30);
+  --corp-edge-soft: rgba(111, 141, 179, 0.16);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-corp-red: var(--color-corp-red);
-  --color-corp-red-bright: var(--color-corp-red-bright);
-  --color-corp-red-dim: var(--color-corp-red-dim);
-  --color-corp-cyan: var(--color-corp-cyan);
+  --color-corp-accent: var(--color-corp-accent);
+  --color-corp-accent-bright: var(--color-corp-accent-bright);
+  --color-corp-accent-dim: var(--color-corp-accent-dim);
+  --color-corp-ghost: var(--color-corp-ghost);
   --color-corp-950: var(--color-corp-950);
   --color-corp-900: var(--color-corp-900);
   --color-corp-800: var(--color-corp-800);
@@ -45,6 +55,9 @@
   --color-corp-400: var(--color-corp-400);
   --color-corp-300: var(--color-corp-300);
   --color-corp-100: var(--color-corp-100);
+  --color-corp-ghost-alt: var(--color-corp-ghost-alt);
+  --color-corp-pos: var(--color-corp-pos);
+  --color-corp-neg: var(--color-corp-neg);
   --font-display: var(--font-oxanium);
   --font-brand: var(--font-michroma);
   --font-mono: var(--font-plex-mono);
@@ -57,12 +70,12 @@ body {
   font-family: var(--font-plex-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
-::selection { background: var(--color-corp-red); color: #fff; }
+::selection { background: var(--color-corp-accent); color: #fff; }
 
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-track { background: var(--color-corp-900); }
 ::-webkit-scrollbar-thumb { background: var(--color-corp-700); }
-::-webkit-scrollbar-thumb:hover { background: var(--color-corp-red-dim); }
+::-webkit-scrollbar-thumb:hover { background: var(--color-corp-accent-dim); }
 
 /* ============================================================
    AMBIENT MOTION
@@ -241,16 +254,16 @@ body {
     background: linear-gradient(
       180deg,
       transparent,
-      rgba(226, 35, 26, 0.10) 45%,
+      rgba(111, 141, 179, 0.12) 45%,
       rgba(255, 255, 255, 0.06) 50%,
-      rgba(226, 35, 26, 0.10) 55%,
+      rgba(111, 141, 179, 0.12) 55%,
       transparent
     );
     animation: corp-scan 5.5s linear infinite;
   }
   .corp-hazard {
     height: 6px;
-    background: repeating-linear-gradient(-45deg, #e2231a 0 14px, #16100f 14px 28px);
+    background: repeating-linear-gradient(-45deg, #6f8db3 0 14px, #10161f 14px 28px);
   }
 
   /* ---------- ghost-text rig ---------- */
@@ -271,8 +284,8 @@ body {
     width: 100%;
     pointer-events: none;
   }
-  .gx::before { color: var(--color-corp-cyan); }
-  .gx::after { color: var(--color-corp-red); }
+  .gx::before { color: var(--color-corp-ghost); }
+  .gx::after { color: var(--color-corp-ghost-alt); }
 
   .gx-idle { animation: corp-idle-slice 9.1s steps(1) infinite; }
   .gx-idle::before { animation: corp-ghost-cyan 9.1s steps(1) infinite; }
@@ -283,7 +296,7 @@ body {
   /* ---------- panels ---------- */
   .corp-panel {
     position: relative;
-    background: linear-gradient(160deg, rgba(226, 35, 26, 0.05), rgba(19, 13, 12, 0.6));
+    background: linear-gradient(160deg, rgba(111, 141, 179, 0.06), rgba(12, 17, 24, 0.6));
     border: 1px solid var(--corp-edge);
     clip-path: polygon(
       18px 0,
@@ -300,7 +313,7 @@ body {
     position: absolute;
     width: 16px;
     height: 16px;
-    border: 1.5px solid var(--color-corp-red);
+    border: 1.5px solid var(--color-corp-accent);
     opacity: 0.5;
     pointer-events: none;
   }
@@ -323,9 +336,9 @@ body {
     z-index: 2;
     background: linear-gradient(
       90deg,
-      rgba(0, 229, 255, 0.4),
-      rgba(226, 35, 26, 0.55) 55%,
-      rgba(0, 229, 255, 0.28)
+      rgba(127, 224, 255, 0.38),
+      rgba(151, 166, 255, 0.5) 55%,
+      rgba(127, 224, 255, 0.26)
     );
     mix-blend-mode: screen;
     pointer-events: none;
@@ -335,7 +348,7 @@ body {
   .corp-tile:hover,
   .corp-tile:focus-visible {
     transform: translateY(-4px);
-    border-color: var(--color-corp-red);
+    border-color: var(--color-corp-accent);
     outline: none;
     animation: corp-hum 3.7s steps(1) infinite;
   }
@@ -393,19 +406,19 @@ body {
     align-items: center;
     justify-content: center;
     gap: 8px;
-    background: var(--color-corp-red);
-    color: #0a0706;
+    background: var(--color-corp-accent);
+    color: #06080b;
     font-family: var(--font-oxanium), sans-serif;
     font-weight: 700;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    border: 1px solid var(--color-corp-red);
+    border: 1px solid var(--color-corp-accent);
     clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
     transition: background 150ms ease, color 150ms ease, box-shadow 150ms ease;
   }
   .btn-corp:hover {
-    background: var(--color-corp-red-bright);
-    box-shadow: 0 0 18px rgba(226, 35, 26, 0.5);
+    background: var(--color-corp-accent-bright);
+    box-shadow: 0 0 18px rgba(111, 141, 179, 0.45);
   }
   .btn-corp:disabled {
     background: transparent;
@@ -432,8 +445,8 @@ body {
   }
   .btn-corp-ghost:hover {
     color: #fff;
-    border-color: var(--color-corp-red);
-    background: rgba(226, 35, 26, 0.08);
+    border-color: var(--color-corp-accent);
+    background: rgba(111, 141, 179, 0.10);
   }
 
   .btn-corp-danger {
@@ -441,18 +454,18 @@ body {
     align-items: center;
     justify-content: center;
     background: transparent;
-    color: var(--color-corp-red);
+    color: var(--color-corp-accent);
     font-family: var(--font-oxanium), sans-serif;
     font-weight: 600;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    border: 1px solid var(--color-corp-red-dim);
+    border: 1px solid var(--color-corp-accent-dim);
     clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
     transition: border-color 150ms ease, background 150ms ease;
   }
   .btn-corp-danger:hover {
-    border-color: var(--color-corp-red);
-    background: rgba(226, 35, 26, 0.12);
+    border-color: var(--color-corp-accent);
+    background: rgba(111, 141, 179, 0.14);
   }
 
   .input-corp {
@@ -465,8 +478,8 @@ body {
   .input-corp::placeholder { color: var(--color-corp-600); }
   .input-corp:focus {
     outline: none;
-    border-color: var(--color-corp-red);
-    box-shadow: 0 0 0 1px rgba(226, 35, 26, 0.35), inset 0 0 14px rgba(226, 35, 26, 0.08);
+    border-color: var(--color-corp-accent);
+    box-shadow: 0 0 0 1px rgba(111, 141, 179, 0.4), inset 0 0 14px rgba(111, 141, 179, 0.08);
   }
   .input-corp option { background: var(--color-corp-900); color: var(--foreground); }
 
@@ -505,13 +518,13 @@ body {
     cursor: pointer;
     transition: color 150ms ease, border-color 150ms ease, background 150ms ease;
   }
-  .corp-chip:hover { color: #fff; border-color: var(--color-corp-red); }
+  .corp-chip:hover { color: #fff; border-color: var(--color-corp-accent); }
   .corp-chip-on {
-    background: var(--color-corp-red);
-    border-color: var(--color-corp-red);
-    color: #0a0706;
+    background: var(--color-corp-accent);
+    border-color: var(--color-corp-accent);
+    color: #06080b;
   }
-  .corp-chip-on:hover { background: var(--color-corp-red-bright); color: #0a0706; }
+  .corp-chip-on:hover { background: var(--color-corp-accent-bright); color: #06080b; }
 }
 
 /* ============================================================

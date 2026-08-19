@@ -16,20 +16,21 @@ function Metric({
   label,
   value,
   sub,
-  accent,
+  sign,
 }: {
   label: string;
   value: string;
   sub?: string;
-  accent?: boolean;
+  /** Colour the figure by whether it's a gain or a loss. */
+  sign?: number;
 }) {
+  const tone =
+    sign === undefined ? "text-white" : sign >= 0 ? "text-corp-pos" : "text-corp-neg";
   return (
     <div className="corp-panel p-5">
       <div className="corp-label">{label}</div>
       <div
-        className={`mt-1.5 font-display text-[26px] font-bold leading-none tabular-nums ${
-          accent ? "text-corp-red-bright" : "text-white"
-        }`}
+        className={`mt-1.5 font-display text-[26px] font-bold leading-none tabular-nums ${tone}`}
       >
         {value}
       </div>
@@ -111,9 +112,9 @@ export default async function AnalyticsPage() {
               label="Total Profit"
               value={money(profit)}
               sub={`${margin.toFixed(1)}% margin`}
-              accent
+              sign={profit}
             />
-            <Metric label="Avg Profit / Sale" value={money(avgProfit)} />
+            <Metric label="Avg Profit / Sale" value={money(avgProfit)} sign={avgProfit} />
             <Metric
               label="Sell-Through Rate"
               value={`${sellThrough.toFixed(0)}%`}

@@ -6,7 +6,7 @@ A Next.js app for tracking laptop inventory, prep status, eBay listings, and AI-
 
 - **Next.js 16** (App Router, TypeScript, Server Actions)
 - **Prisma 7 + SQLite** (`better-sqlite3` driver adapter) for the database
-- **Tailwind CSS v4** for the "Megacorp" theme — red-on-black corporate terminal
+- **Tailwind CSS v4** for the "Megacorp" theme — greyish blue on black, corporate terminal
 - **Anthropic API** (Claude, with the web search tool) powers the Pricing page's AI agent
 - **eBay Trading API + OAuth** powers the eBay Listings page
 
@@ -50,12 +50,13 @@ only if you ever need to force it.
 
 ## Theme
 
-"Megacorp" — a red-on-black corporate terminal look, defined entirely in `app/globals.css`:
+"Megacorp" — a greyish-blue-on-black corporate terminal look, defined entirely in `app/globals.css`. Every colour is a `--color-corp-*` token in one `:root` block, so re-theming means editing that block and nothing else:
 
 - **Chrome**: a fixed noise/flicker overlay, a scanline that sweeps the viewport, and a hazard stripe under the nav.
 - **Idle glitch**: page headings and the wordmark slice apart and throw cyan/red ghost copies on their own clocks (7.3s / 9.1s / 11.7s) so they never fire in sync. Driven by `<GlitchText>`, which feeds the ghosts through `data-text`.
 - **Hover glitch**: each tile carries one of five burst signatures (`corp-sig-a` … `corp-sig-e`) that fires on hover-in. Underneath, three sustained layers — ghost drift, a tear band, and a brightness hum — run on free-running, co-prime clocks and are only *revealed* on hover, never restarted. That's why no two hovers land on the same frame.
 - **Motion off**: everything is disabled under `prefers-reduced-motion: reduce`.
+- **Semantic colour**: the accent is deliberately non-semantic, so profit figures carry the only non-blue hues in the app — `--color-corp-pos` (cool teal) for a gain, `--color-corp-neg` (muted rose) for a loss.
 
 ## MacBook reference data
 
