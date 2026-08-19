@@ -1,0 +1,137 @@
+@import "tailwindcss";
+
+:root {
+  --background: #eef1f8;
+  --foreground: #0f1c3f;
+
+  --color-navy-950: #070d24;
+  --color-navy-900: #0c1638;
+  --color-navy-800: #122052;
+  --color-navy-700: #182c6b;
+  --color-navy-600: #1f3a89;
+  --color-navy-500: #2a4bab;
+  --color-navy-400: #3f63c9;
+  --color-navy-300: #7893dd;
+  --color-navy-200: #b3c2ec;
+  --color-navy-100: #dde5f7;
+  --color-navy-50: #f4f7fd;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-navy-950: var(--color-navy-950);
+  --color-navy-900: var(--color-navy-900);
+  --color-navy-800: var(--color-navy-800);
+  --color-navy-700: var(--color-navy-700);
+  --color-navy-600: var(--color-navy-600);
+  --color-navy-500: var(--color-navy-500);
+  --color-navy-400: var(--color-navy-400);
+  --color-navy-300: var(--color-navy-300);
+  --color-navy-200: var(--color-navy-200);
+  --color-navy-100: var(--color-navy-100);
+  --color-navy-50: var(--color-navy-50);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+@layer components {
+  /* A raised, "3D" white panel. Used for every launch/page container. */
+  .panel-3d {
+    background: linear-gradient(180deg, #ffffff 0%, #f7f9fd 100%);
+    border: 1px solid var(--color-navy-100);
+    border-radius: 1rem;
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.8) inset,
+      0 10px 20px -12px rgba(15, 28, 63, 0.25),
+      0 2px 4px rgba(15, 28, 63, 0.08);
+    transition:
+      transform 180ms ease,
+      box-shadow 180ms ease;
+  }
+
+  /* Interactive variant: lifts and deepens its shadow on hover, for any
+     container the user can click into. */
+  .panel-3d-interactive {
+    cursor: pointer;
+  }
+  .panel-3d-interactive:hover,
+  .panel-3d-interactive:focus-visible {
+    transform: translateY(-6px);
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.8) inset,
+      0 24px 34px -16px rgba(15, 28, 63, 0.35),
+      0 6px 10px rgba(15, 28, 63, 0.12);
+  }
+  .panel-3d-interactive:active {
+    transform: translateY(-2px);
+  }
+
+  /* Static variant (e.g. the Profit tile): same 3D look, no hover affordance. */
+  .panel-3d-static {
+    cursor: default;
+  }
+
+  .btn-navy {
+    background: linear-gradient(180deg, var(--color-navy-600) 0%, var(--color-navy-800) 100%);
+    color: white;
+    border-radius: 0.6rem;
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.15) inset,
+      0 6px 14px -6px rgba(15, 28, 63, 0.5);
+    transition:
+      transform 150ms ease,
+      box-shadow 150ms ease,
+      filter 150ms ease;
+  }
+  .btn-navy:hover {
+    filter: brightness(1.08);
+    transform: translateY(-2px);
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.15) inset,
+      0 10px 20px -8px rgba(15, 28, 63, 0.55);
+  }
+  .btn-navy:active {
+    transform: translateY(0);
+  }
+  .btn-navy:disabled {
+    filter: grayscale(0.4);
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .btn-outline-navy {
+    background: white;
+    color: var(--color-navy-700);
+    border: 1px solid var(--color-navy-200);
+    border-radius: 0.6rem;
+    transition:
+      transform 150ms ease,
+      box-shadow 150ms ease,
+      background 150ms ease;
+  }
+  .btn-outline-navy:hover {
+    background: var(--color-navy-50);
+    box-shadow: 0 6px 14px -8px rgba(15, 28, 63, 0.35);
+    transform: translateY(-1px);
+  }
+
+  .input-navy {
+    background: white;
+    border: 1px solid var(--color-navy-200);
+    border-radius: 0.5rem;
+    color: var(--foreground);
+    box-shadow: 0 1px 2px rgba(15, 28, 63, 0.06) inset;
+  }
+  .input-navy:focus {
+    outline: 2px solid var(--color-navy-400);
+    outline-offset: 1px;
+  }
+}

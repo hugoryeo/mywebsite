@@ -1,0 +1,98 @@
+// Prisma schema for the Laptop Sales Tracker.
+// learn more: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+enum BrandOs {
+  apple
+  windows
+}
+
+model Laptop {
+  id       String  @id @default(cuid())
+  brandOs  BrandOs
+
+  // Windows-only: which manufacturer (Dell, HP, Lenovo, ...). Apple laptops
+  // don't need this since the brand is implied by brandOs.
+  brand String?
+
+  // Shared spec fields (both OS branches)
+  year         Int?
+  processor    String?
+  ram          String?
+  storage      String?
+  modelNumber  String?
+  hasCharger   Boolean @default(false)
+  notes        String?
+  source       String? // where the laptop came from (supplier, trade-in, auction, ...)
+
+  // Windows-only
+  resolution String?
+
+  // Apple-only
+  batteryHealth Int?
+
+  // Shared: cycle count applies to both OS branches
+  cycleCount Int?
+
+  // Commercial
+  cost  Float? // what we paid for it
+  price Float? // current asking / listed price
+
+  // Prep pipeline — must happen in order, but stored as independent flags
+  // so any stage can be corrected without cascading.
+  statusReset    Boolean @default(false)
+  statusCleaned  Boolean @default(false)
+  statusPrepared Boolean @default(false)
+  statusListed   Boolean @default(false)
+
+  // Sale
+  sold      Boolean   @default(false)
+  soldPrice Float?
+  shipping  Float?
+  fees      Float?
+  soldAt    DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  priceEstimates PriceEstimate[]
+
+  @@index([sold])
+  @@index([statusPrepared])
+}
+
+// A single AI pricing-agent run: it searched the web for eBay sold listings
+// matching a laptop's spec and condition, and this is what it found.
+model PriceEstimate {
+  id       String @id @default(cuid())
+  laptopId String
+  laptop   Laptop @relation(fields: [laptopId], references: [id], onDelete: Cascade)
+
+  averagePrice Float
+  lowPrice     Float?
+  highPrice    Float?
+  currency     String @default("GBP")
+  sampleSize   Int?
+
+  summary String // agent's written explanation of the estimate
+  sources String // JSON-encoded array of {title, price, url} it cited
+
+  createdAt DateTime @default(now())
+
+  @@index([laptopId])
+}
+
+// Key/value store for API credentials (eBay, Anthropic) entered via Settings.
+// Small local app, single operator — values are stored as plain text.
+model Setting {
+  key   String @id
+  value String
+}
