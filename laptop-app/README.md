@@ -38,7 +38,7 @@ only if you ever need to force it.
 ## Pages
 
 - **Launch** (`/`) — a bento grid: Profit is a static 2×2 anchor that leads nowhere, Stock is a wide tile, Pricing and eBay are small, and Analytics runs the full width. Every tile except Profit links to its page.
-- **Stock** (`/stock`) — in-stock / sold laptop lists with a Reset → Cleaned → Prepared → Listed status checklist per laptop.
+- **Stock** (`/stock`) — in-stock / sold laptop lists with a Reset → Cleaned → Prepared → Listed status checklist per laptop. Every laptop carries a short reference code (`LT-4F2A`) shown beside its name, which is what tells two otherwise-identical machines apart.
 - **Stock → Add / Edit** — the spec form branches on Apple vs. Windows. With **Apple** selected, entering the model number (A-number) looks it up in `app/lib/appleModels.ts` and turns Processor, GPU cores, RAM, Storage, Colour and Charger Wattage into dropdowns limited to the configurations Apple shipped for that model — picking a different chip narrows the rest (an A2442 offers M1 Pro 8c/10c and M1 Max 10c; choosing M1 Max switches GPU cores to 24/32 and RAM to 32/64GB). An unrecognised A-number falls back to free-text fields. Windows gets Manufacturer + Resolution; both share Year/Cycle Count/Serial Number/Condition/Charger/Source/Notes/Pricing.
 - **Listing copy** — each laptop's page generates an eBay title and description from its details, each with a copy button:
   - Title: `MacBook Pro 14" M1 Max 64GB 1TB Space Grey 10c CPU 32c GPU A2442`
@@ -57,6 +57,14 @@ only if you ever need to force it.
 - **Hover glitch**: each tile carries one of five burst signatures (`corp-sig-a` … `corp-sig-e`) that fires on hover-in. Underneath, three sustained layers — ghost drift, a tear band, and a brightness hum — run on free-running, co-prime clocks and are only *revealed* on hover, never restarted. That's why no two hovers land on the same frame.
 - **Motion off**: everything is disabled under `prefers-reduced-motion: reduce`.
 - **Semantic colour**: the accent is deliberately non-semantic, so profit figures carry the only non-blue hues in the app — `--color-corp-pos` (cool teal) for a gain, `--color-corp-neg` (muted rose) for a loss.
+
+## Reference codes
+
+Each laptop gets a permanent code like `LT-4F2A` on creation — short enough for a sticker, unambiguous to read back. The alphabet (`app/lib/refCode.ts`) is Crockford-style base32 with the transcription traps removed: no `0`/`O`, no `1`/`I`/`L`, no `U`. Four places over 31 symbols is ~923,000 codes.
+
+Uniqueness is enforced by a unique index, and creation retries on a constraint violation rather than checking first, which would leave a race between the check and the insert. Codes are never reused, unlike the recycled 2-digit codes in the original Electron tracker.
+
+`normaliseRefCode()` accepts what someone would actually type — `lt-4f2a`, `4F2A`, `LT4F2A` — and returns the canonical form.
 
 ## MacBook reference data
 

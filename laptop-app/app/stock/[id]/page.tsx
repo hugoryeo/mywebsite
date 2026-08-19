@@ -7,6 +7,7 @@ import StatusChecklist from "@/app/components/StatusChecklist";
 import GlitchText from "@/app/components/GlitchText";
 import { updateLaptop, markSold, markUnsold, deleteLaptop } from "@/app/lib/actions";
 import CopyField from "@/app/components/CopyField";
+import RefCode from "@/app/components/RefCode";
 import { buildListingTitle, buildListingDescription } from "@/app/lib/listing";
 
 export const dynamic = "force-dynamic";
@@ -51,9 +52,12 @@ export default async function LaptopDetailPage({
             as="h1"
             className="corp-heading text-[32px] leading-tight"
           />
-          <p className="mt-2 text-[12px] text-corp-500">
-            Added {laptop.createdAt.toLocaleDateString()}
-          </p>
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            <RefCode code={laptop.refCode} size="lg" />
+            <span className="text-[12px] text-corp-500">
+              Added {laptop.createdAt.toLocaleDateString()}
+            </span>
+          </div>
         </div>
         <form action={boundDelete}>
           <button type="submit" className="btn-corp-danger px-4 py-2 text-[11px]">

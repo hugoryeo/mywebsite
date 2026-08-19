@@ -5,6 +5,7 @@ import { getSetting, SETTING_KEYS } from "@/app/lib/settings";
 import PriceCheckButton from "@/app/components/PriceCheckButton";
 import GlitchText from "@/app/components/GlitchText";
 import { Panel } from "@/app/components/Tile";
+import RefCode from "@/app/components/RefCode";
 
 export const dynamic = "force-dynamic";
 
@@ -55,12 +56,15 @@ export default async function PricingPage() {
                 <span className="corp-bracket corp-bracket-br" aria-hidden="true" />
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div>
-                    <Link
-                      href={`/stock/${l.id}`}
-                      className="font-display text-[17px] font-bold text-white hover:text-corp-accent-bright"
-                    >
-                      {displayTitle(l)}
-                    </Link>
+                    <div className="flex flex-wrap items-center gap-2.5">
+                      <RefCode code={l.refCode} />
+                      <Link
+                        href={`/stock/${l.id}`}
+                        className="font-display text-[17px] font-bold text-white hover:text-corp-accent-bright"
+                      >
+                        {displayTitle(l)}
+                      </Link>
+                    </div>
                     <div className="mt-1 text-[12px] text-corp-400">{specSummary(l)}</div>
                     <div className="mt-1 text-[12px] text-corp-500">
                       Asking price: {money(l.price)}

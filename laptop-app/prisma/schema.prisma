@@ -17,6 +17,12 @@ enum BrandOs {
 
 model Laptop {
   id       String  @id @default(cuid())
+
+  // Short human-facing reference, e.g. "LT-4F2A" — what goes on the sticker
+  // and what you search for. Permanent and never reused, unlike the 2-digit
+  // codes the old tracker recycled once a laptop sold.
+  refCode String @unique
+
   brandOs  BrandOs
 
   // Windows-only: which manufacturer (Dell, HP, Lenovo, ...). Apple laptops
