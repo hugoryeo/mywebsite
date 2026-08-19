@@ -257,6 +257,7 @@ body {
   .gx {
     position: relative;
     display: inline-block;
+    max-width: 100%;
   }
   .gx::before,
   .gx::after {
@@ -264,8 +265,11 @@ body {
     position: absolute;
     left: 0;
     top: 0;
+    /* Match the parent's box so the ghosts wrap on exactly the same line
+       breaks. Without this they stay on one line and a heading that wraps on
+       a narrow screen pushes the page sideways. */
+    width: 100%;
     pointer-events: none;
-    white-space: pre;
   }
   .gx::before { color: var(--color-corp-cyan); }
   .gx::after { color: var(--color-corp-red); }
