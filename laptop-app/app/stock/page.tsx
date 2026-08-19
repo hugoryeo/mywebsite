@@ -4,6 +4,7 @@ import { money, specSummary, displayTitle } from "@/app/lib/laptop";
 import StatusChecklist from "@/app/components/StatusChecklist";
 import GlitchText from "@/app/components/GlitchText";
 import { Panel } from "@/app/components/Tile";
+import RefCode from "@/app/components/RefCode";
 
 export const dynamic = "force-dynamic";
 
@@ -65,8 +66,11 @@ export default async function StockPage({
               <span className="corp-bracket corp-bracket-br" aria-hidden="true" />
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <Link href={`/stock/${l.id}`} className="min-w-[220px] flex-1 group">
-                  <div className="font-display text-[17px] font-bold text-white group-hover:text-corp-accent-bright">
-                    {displayTitle(l)}
+                  <div className="flex flex-wrap items-center gap-2.5">
+                    <RefCode code={l.refCode} />
+                    <span className="font-display text-[17px] font-bold text-white group-hover:text-corp-accent-bright">
+                      {displayTitle(l)}
+                    </span>
                   </div>
                   <div className="mt-1 text-[12px] text-corp-400">{specSummary(l)}</div>
                 </Link>

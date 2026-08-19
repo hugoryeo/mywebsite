@@ -5,8 +5,9 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "./prisma";
 import { STATUS_STAGES, type StatusKey } from "./laptop";
 import { SETTING_KEYS, setSetting, deleteSetting } from "./settings";
-import type { BrandOs } from "@/app/generated/prisma/client";
+import { Prisma, type BrandOs } from "@/app/generated/prisma/client";
 import { lookupAppleModel, normaliseModelNumber } from "./appleModels";
+import { generateRefCode } from "./refCode";
 
 function str(formData: FormData, key: string): string | null {
   const v = formData.get(key);
@@ -75,13 +76,31 @@ export async function createLaptop(formData: FormData): Promise<void> {
     throw new Error("Invalid brand OS");
   }
 
-  const laptop = await prisma.laptop.create({
-    data: {
-      brandOs,
-      brand: brandOs === "windows" ? str(formData, "brand") : null,
-      ...specData(formData, brandOs),
-    },
-  });
+  const data = {
+    brandOs,
+    brand: brandOs === "windows" ? str(formData, "brand") : null,
+    ...specData(formData, brandOs),
+  };
+
+  // Reference codes are random, so a collision is possible in principle. The
+  // unique index is what actually guarantees it — retry on the constraint
+  // rather than checking first, which would leave a race between the check
+  // and the insert.
+  let laptop = null;
+  for (let attempt = 0; attempt < 5 && !laptop; attempt++) {
+    try {
+      laptop = await prisma.laptop.create({
+        data: { ...data, refCode: generateRefCode() },
+      });
+    } catch (err) {
+      const isDuplicateRefCode =
+        err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002";
+      if (!isDuplicateRefCode) throw err;
+    }
+  }
+  if (!laptop) {
+    throw new Error("Could not allocate a unique reference code. Please try again.");
+  }
 
   revalidateEverywhere(laptop.id);
   redirect("/stock");
