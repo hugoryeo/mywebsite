@@ -33,6 +33,21 @@ model Laptop {
   notes        String?
   source       String? // where the laptop came from (supplier, trade-in, auction, ...)
 
+  serialNumber String?
+  colour       String?
+  condition    String? // Excellent | Very Good | Good | Fair | Poor
+
+  // Wattage of the charger being sold with it, when one is included.
+  chargerWattage String?
+
+  // Apple-silicon core counts and chassis details, resolved from the model
+  // number against the MacBook reference data at entry time. Stored on the
+  // record so a generated listing stays stable even if that data is revised.
+  cpuCores   Int?
+  gpuCores   Int?
+  screenSize String?
+  macType    String? // "Air" | "Pro"
+
   // Windows-only
   resolution String?
 

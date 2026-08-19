@@ -6,6 +6,8 @@ import LaptopForm from "@/app/components/LaptopForm";
 import StatusChecklist from "@/app/components/StatusChecklist";
 import GlitchText from "@/app/components/GlitchText";
 import { updateLaptop, markSold, markUnsold, deleteLaptop } from "@/app/lib/actions";
+import CopyField from "@/app/components/CopyField";
+import { buildListingTitle, buildListingDescription } from "@/app/lib/listing";
 
 export const dynamic = "force-dynamic";
 
@@ -63,6 +65,17 @@ export default async function LaptopDetailPage({
       <div className="corp-panel p-6">
         <h2 className="corp-heading mb-4 text-lg">Prep Status</h2>
         <StatusChecklist laptop={laptop} />
+      </div>
+
+      <div className="corp-panel p-6">
+        <h2 className="corp-heading mb-1.5 text-lg">Listing Copy</h2>
+        <p className="mb-5 text-[12px] leading-relaxed text-corp-400">
+          Generated from this laptop&rsquo;s details. Edit the record below and it updates.
+        </p>
+        <div className="flex flex-col gap-5">
+          <CopyField label="Title" value={buildListingTitle(laptop)} />
+          <CopyField label="Description" value={buildListingDescription(laptop)} multiline />
+        </div>
       </div>
 
       {laptop.priceEstimates.length > 0 && (

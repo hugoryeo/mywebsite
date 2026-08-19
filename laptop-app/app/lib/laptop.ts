@@ -20,17 +20,29 @@ export const STATUS_STAGES = [
 
 export type StatusKey = (typeof STATUS_STAGES)[number]["key"];
 
-export function specSummary(l: Pick<Laptop, "brandOs" | "brand" | "processor" | "ram" | "storage">): string {
+export function specSummary(
+  l: Pick<Laptop, "brandOs" | "brand" | "processor" | "ram" | "storage" | "colour" | "gpuCores">,
+): string {
   const parts = [
     l.brandOs === "apple" ? "Apple" : l.brand || "Windows",
     l.processor,
+    l.gpuCores ? `${l.gpuCores}c GPU` : null,
     l.ram,
     l.storage,
+    l.colour,
   ].filter(Boolean);
   return parts.join(" · ");
 }
 
-export function displayTitle(l: Pick<Laptop, "brandOs" | "brand" | "modelNumber" | "year">): string {
+export function displayTitle(
+  l: Pick<Laptop, "brandOs" | "brand" | "modelNumber" | "year" | "macType" | "screenSize">,
+): string {
+  // A recognised MacBook reads better as "MacBook Pro 14"" than "Apple A2442".
+  if (l.brandOs === "apple" && l.macType) {
+    return [`MacBook ${l.macType}`, l.screenSize, l.year ? String(l.year) : null, l.modelNumber]
+      .filter(Boolean)
+      .join(" ");
+  }
   const brand = l.brandOs === "apple" ? "Apple" : l.brand || "Windows";
   const bits = [brand, l.year ? String(l.year) : null, l.modelNumber].filter(Boolean);
   return bits.join(" ") || "Untitled laptop";

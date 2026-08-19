@@ -24,7 +24,10 @@ Open [http://localhost:3000](http://localhost:3000).
 
 - **Launch** (`/`) — a bento grid: Profit is a static 2×2 anchor that leads nowhere, Stock is a wide tile, Pricing and eBay are small, and Analytics runs the full width. Every tile except Profit links to its page.
 - **Stock** (`/stock`) — in-stock / sold laptop lists with a Reset → Cleaned → Prepared → Listed status checklist per laptop.
-- **Stock → Add / Edit** — the spec form branches on Apple vs. Windows: Apple gets Battery Health, Windows gets Manufacturer + Resolution; both share Year/Processor/RAM/Storage/Cycle Count/Model Number/Charger/Source/Notes/Pricing.
+- **Stock → Add / Edit** — the spec form branches on Apple vs. Windows. With **Apple** selected, entering the model number (A-number) looks it up in `app/lib/appleModels.ts` and turns Processor, GPU cores, RAM, Storage, Colour and Charger Wattage into dropdowns limited to the configurations Apple shipped for that model — picking a different chip narrows the rest (an A2442 offers M1 Pro 8c/10c and M1 Max 10c; choosing M1 Max switches GPU cores to 24/32 and RAM to 32/64GB). An unrecognised A-number falls back to free-text fields. Windows gets Manufacturer + Resolution; both share Year/Cycle Count/Serial Number/Condition/Charger/Source/Notes/Pricing.
+- **Listing copy** — each laptop's page generates an eBay title and description from its details, each with a copy button:
+  - Title: `MacBook Pro 14" M1 Max 64GB 1TB Space Grey 10c CPU 32c GPU A2442`
+  - Description: `A2442 MacBook Pro M1 Max w/ 96W Charger.` then `Cycle count: 112, Excellent condition`
 - **Pricing** (`/pricing`) — lists laptops in the "Prepared" stage; "Run AI Price Check" calls Claude with the web search tool to find comparable eBay sold listings and stores the result.
 - **Analytics** (`/analytics`) — revenue/profit, sell-through, and "what sells better" breakdowns by brand and processor.
 - **eBay Listings** (`/ebay`) — your live active eBay listings, once eBay is connected.
@@ -38,6 +41,10 @@ Open [http://localhost:3000](http://localhost:3000).
 - **Idle glitch**: page headings and the wordmark slice apart and throw cyan/red ghost copies on their own clocks (7.3s / 9.1s / 11.7s) so they never fire in sync. Driven by `<GlitchText>`, which feeds the ghosts through `data-text`.
 - **Hover glitch**: each tile carries one of five burst signatures (`corp-sig-a` … `corp-sig-e`) that fires on hover-in. Underneath, three sustained layers — ghost drift, a tear band, and a brightness hum — run on free-running, co-prime clocks and are only *revealed* on hover, never restarted. That's why no two hovers land on the same frame.
 - **Motion off**: everything is disabled under `prefers-reduced-motion: reduce`.
+
+## MacBook reference data
+
+`app/lib/appleModels.ts` holds every MacBook Air and Pro sold from 2019 onward, keyed by A-number, with the chips, CPU/GPU core bins, RAM and storage options, colours and charger wattages Apple shipped for each. Apple's own site is not reachable from the build environment, so the figures were assembled from Apple's published specs cross-checked against spec databases — the RAM/storage ceilings and charger wattages on the newest models are the most likely to need a correction. Editing that one file is all it takes to fix or extend a model; nothing else hard-codes these values.
 
 ## Configuring the AI pricing agent
 

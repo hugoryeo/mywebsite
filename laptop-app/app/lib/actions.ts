@@ -6,6 +6,7 @@ import { prisma } from "./prisma";
 import { STATUS_STAGES, type StatusKey } from "./laptop";
 import { SETTING_KEYS, setSetting, deleteSetting } from "./settings";
 import type { BrandOs } from "@/app/generated/prisma/client";
+import { lookupAppleModel, normaliseModelNumber } from "./appleModels";
 
 function str(formData: FormData, key: string): string | null {
   const v = formData.get(key);
@@ -32,6 +33,42 @@ function revalidateEverywhere(id?: string) {
   if (id) revalidatePath(`/stock/${id}`);
 }
 
+/**
+ * Spec fields shared by create and update. For Apple we re-resolve the model
+ * number against the reference data server-side rather than trusting the
+ * hidden inputs, so the stored chassis details always match the A-number.
+ */
+function specData(formData: FormData, brandOs: BrandOs) {
+  const isApple = brandOs === "apple";
+  const rawModel = str(formData, "modelNumber");
+  const modelNumber = isApple && rawModel ? normaliseModelNumber(rawModel) : rawModel;
+  const appleModel = isApple ? lookupAppleModel(modelNumber) : null;
+
+  return {
+    year: int(formData, "year"),
+    processor: str(formData, "processor"),
+    ram: str(formData, "ram"),
+    storage: str(formData, "storage"),
+    resolution: isApple ? null : str(formData, "resolution"),
+    cycleCount: int(formData, "cycleCount"),
+    batteryHealth: isApple ? int(formData, "batteryHealth") : null,
+    modelNumber,
+    hasCharger: formData.get("hasCharger") === "on",
+    notes: str(formData, "notes"),
+    source: str(formData, "source"),
+    cost: num(formData, "cost"),
+    price: num(formData, "price"),
+    serialNumber: str(formData, "serialNumber"),
+    colour: str(formData, "colour"),
+    condition: str(formData, "condition"),
+    chargerWattage: str(formData, "chargerWattage"),
+    cpuCores: int(formData, "cpuCores"),
+    gpuCores: int(formData, "gpuCores"),
+    screenSize: appleModel?.screenSize ?? str(formData, "screenSize"),
+    macType: appleModel?.family ?? (isApple ? str(formData, "macType") : null),
+  };
+}
+
 export async function createLaptop(formData: FormData): Promise<void> {
   const brandOs = (str(formData, "brandOs") ?? "windows") as BrandOs;
   if (brandOs !== "apple" && brandOs !== "windows") {
@@ -42,19 +79,7 @@ export async function createLaptop(formData: FormData): Promise<void> {
     data: {
       brandOs,
       brand: brandOs === "windows" ? str(formData, "brand") : null,
-      year: int(formData, "year"),
-      processor: str(formData, "processor"),
-      ram: str(formData, "ram"),
-      storage: str(formData, "storage"),
-      resolution: brandOs === "windows" ? str(formData, "resolution") : null,
-      cycleCount: int(formData, "cycleCount"),
-      batteryHealth: brandOs === "apple" ? int(formData, "batteryHealth") : null,
-      modelNumber: str(formData, "modelNumber"),
-      hasCharger: formData.get("hasCharger") === "on",
-      notes: str(formData, "notes"),
-      source: str(formData, "source"),
-      cost: num(formData, "cost"),
-      price: num(formData, "price"),
+      ...specData(formData, brandOs),
     },
   });
 
@@ -70,19 +95,7 @@ export async function updateLaptop(id: string, formData: FormData): Promise<void
     where: { id },
     data: {
       brand: brandOs === "windows" ? str(formData, "brand") : null,
-      year: int(formData, "year"),
-      processor: str(formData, "processor"),
-      ram: str(formData, "ram"),
-      storage: str(formData, "storage"),
-      resolution: brandOs === "windows" ? str(formData, "resolution") : null,
-      cycleCount: int(formData, "cycleCount"),
-      batteryHealth: brandOs === "apple" ? int(formData, "batteryHealth") : null,
-      modelNumber: str(formData, "modelNumber"),
-      hasCharger: formData.get("hasCharger") === "on",
-      notes: str(formData, "notes"),
-      source: str(formData, "source"),
-      cost: num(formData, "cost"),
-      price: num(formData, "price"),
+      ...specData(formData, brandOs),
     },
   });
 
