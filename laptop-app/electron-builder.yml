@@ -1,0 +1,54 @@
+appId: com.hugoryeo.laptop-sales-tracker
+productName: Laptop Sales Tracker
+copyright: Copyright © hugoryeo
+
+directories:
+  output: dist-desktop
+  buildResources: build
+
+# Only the Electron main process goes in the asar. It uses nothing but Electron
+# and Node built-ins, so the app's dependencies are deliberately excluded here —
+# the server gets its own already-pruned copy through extraResources below,
+# and shipping both would double every one of them.
+files:
+  - electron/main.js
+  - package.json
+  - "!node_modules/**/*"
+
+# The Next.js standalone bundle, assembled by scripts/build-desktop.mjs. It sits
+# outside the asar because it contains better-sqlite3's compiled binding, which
+# has to be a real file on disk for the dynamic loader to open it.
+extraResources:
+  - from: .next/standalone
+    to: next
+
+# Already rebuilt for Electron's ABI by scripts/build-desktop.mjs, and the copy
+# that matters lives in extraResources where electron-builder would not look
+# anyway.
+npmRebuild: false
+
+mac:
+  category: public.app-category.business
+  target:
+    - dmg
+    - zip
+  icon: build/icon.png
+
+win:
+  target:
+    - nsis
+    - portable
+  icon: build/icon.png
+
+linux:
+  target:
+    - AppImage
+  category: Office
+  icon: build/icon.png
+
+nsis:
+  oneClick: true
+  artifactName: LaptopSalesTracker-Setup-${version}.${ext}
+
+portable:
+  artifactName: LaptopSalesTracker-Portable-${version}.${ext}

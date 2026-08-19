@@ -1,6 +1,6 @@
 # Laptop Sales Tracker
 
-A Next.js app for tracking laptop inventory, prep status, eBay listings, and AI-assisted pricing.
+A Next.js app for tracking laptop inventory, prep status, eBay listings, and AI-assisted pricing. It runs in a browser, or as a desktop app via Electron.
 
 ## Stack
 
@@ -9,6 +9,7 @@ A Next.js app for tracking laptop inventory, prep status, eBay listings, and AI-
 - **Tailwind CSS v4** for the "Megacorp" theme — greyish blue on black, corporate terminal
 - **Anthropic API** (Claude, with the web search tool) powers the Pricing page's AI agent
 - **eBay Trading API + OAuth** powers the eBay Listings page
+- **Electron + electron-builder** wrap the whole thing as a desktop app
 
 ## Getting started
 
@@ -34,6 +35,80 @@ The Prisma client is generated into `app/generated/prisma`, which is gitignored.
 `npm install`, `npm run dev` and `npm run build` all run `prisma generate` for
 you, so a fresh clone needs no extra step; run `npx prisma generate` by hand
 only if you ever need to force it.
+
+## Desktop app
+
+The app is a server app — Server Actions, server-side Prisma — so there is no
+static bundle to point a window at. The Electron main process
+(`electron/main.js`) starts the Next.js production server on localhost and loads
+it in a `BrowserWindow`. From the user's side it is an app; underneath it is the
+same code the browser version runs.
+
+```bash
+npm run desktop:dev     # against `next dev`, reloads on save
+npm run desktop:build   # build the server bundle
+npm run desktop         # run the built app, unpackaged
+npm run desktop:dist    # build + package installers into dist-desktop/
+```
+
+`desktop:dist` produces a `.dmg` and `.zip` on macOS, an NSIS installer and a
+portable `.exe` on Windows, and an AppImage on Linux — whichever platform you
+run it on. **It can only build for the platform you run it on**: the app depends
+on `better-sqlite3`, which is compiled C, and compiled C does not
+cross-compile here.
+
+### Where your data lives
+
+In the OS's per-app data directory, not next to the app:
+
+| | |
+|---|---|
+| macOS | `~/Library/Application Support/Laptop Sales Tracker/laptops.db` |
+| Windows | `%APPDATA%\Laptop Sales Tracker\laptops.db` |
+| Linux | `~/.config/Laptop Sales Tracker/laptops.db` |
+
+On macOS the app bundle is read-only and on Windows the installer overwrites its
+own directory, so a database kept beside the app would be unwritable in one case
+and erased on update in the other. This location survives both. It is also
+separate from the `dev.db` the browser version uses, so experimenting with
+`npm run dev` cannot touch your real stock.
+
+Migrations run automatically each time the app starts, so updating the app
+updates the database. There is no Prisma CLI in the package to do that —
+`electron/migrate.js` applies `prisma/migrations/*/migration.sql` directly,
+recording them in the same `_prisma_migrations` table with the same checksums
+the CLI would write. A database it has migrated is one `prisma migrate status`
+still accepts.
+
+### The port
+
+The server binds `127.0.0.1:41827`, and only walks upwards if that is taken. A
+fixed port is what lets eBay's OAuth redirect URI stay the same between
+launches; an ephemeral one would need re-registering every time. Nothing outside
+the machine can reach it.
+
+### Native modules and ABI
+
+`better-sqlite3` has to be compiled against the runtime that loads it, and the
+packaged app loads it in Electron, whose ABI is not the system Node's. Rather
+than switch your `node_modules` over — which would silently break `npm run dev`
+until the next `npm install` — `scripts/build-desktop.mjs` rebuilds it for
+Electron, copies just that one binary into the bundle, and rebuilds it for Node
+again on the way out. If you ever do end up with `NODE_MODULE_VERSION` errors,
+`npm rebuild better-sqlite3` puts things back.
+
+### Packaging layout
+
+The asar holds only `electron/main.js` — it needs nothing but Electron and Node
+built-ins. Everything else ships as `resources/next`: the Next.js standalone
+bundle, which carries only the dependencies the app actually reached for (~31MB
+rather than the ~700MB install tree). The build script prunes `sharp` from it,
+which Next traces in for `next/image` and this app never uses, and strips the
+`.env` files Next copies in, which have no business in something you hand to
+someone else.
+
+The app icon is `build/icon.png`, carried over from the original tracker;
+replace that one file to change it.
 
 ## Pages
 
@@ -85,4 +160,8 @@ The eBay integration (`app/lib/ebay.ts`) is written against eBay's documented OA
 
 ## Database
 
-SQLite via Prisma, stored at `dev.db` in this directory (gitignored). Schema lives in `prisma/schema.prisma`; run `npx prisma migrate dev` after changing it. `npx prisma studio` is a handy way to browse the data directly.
+SQLite via Prisma. In the browser version it is `dev.db` in this directory
+(gitignored); the desktop app uses the per-user location above. Schema lives in
+`prisma/schema.prisma`; run `npx prisma migrate dev` after changing it. `npx
+prisma studio` is a handy way to browse the data directly — point `DATABASE_URL`
+at the desktop database to browse that one.
