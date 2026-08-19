@@ -44,7 +44,7 @@ export default function NavBar() {
               >
                 {link.label}
                 {active && (
-                  <span className="absolute inset-x-3.5 bottom-0.5 h-0.5 bg-corp-red shadow-[0_0_10px_var(--color-corp-red)]" />
+                  <span className="absolute inset-x-3.5 bottom-0.5 h-0.5 bg-corp-accent shadow-[0_0_10px_var(--color-corp-accent)]" />
                 )}
               </Link>
             );

@@ -146,7 +146,7 @@ export default function LaptopForm({
             <div className="flex items-end pb-1">
               {appleModel ? (
                 <p className="text-[12px] text-corp-300">
-                  <span className="text-corp-red-bright">✓ Recognised</span> — MacBook{" "}
+                  <span className="text-corp-accent-bright">✓ Recognised</span> — MacBook{" "}
                   {appleModel.family} {appleModel.screenSize} ({appleModel.year})
                 </p>
               ) : modelNumber.trim() ? (
@@ -400,7 +400,7 @@ export default function LaptopForm({
                 name="hasCharger"
                 type="checkbox"
                 defaultChecked={initial?.hasCharger ?? false}
-                className="h-4 w-4 accent-[color:var(--color-corp-red)]"
+                className="h-4 w-4 accent-[color:var(--color-corp-accent)]"
               />
               Included
             </label>

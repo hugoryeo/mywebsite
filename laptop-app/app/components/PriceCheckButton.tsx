@@ -49,7 +49,7 @@ export default function PriceCheckButton({ laptopId }: { laptopId: string }) {
       >
         {loading ? "Scanning sold listings…" : "Run AI Price Check"}
       </button>
-      {error && <p className="text-[12px] font-medium text-corp-red">{error}</p>}
+      {error && <p className="text-[12px] font-medium text-corp-accent">{error}</p>}
       {result && (
         <div className="border border-[color:var(--corp-edge-soft)] bg-corp-900/60 p-4">
           <div className="font-display text-[22px] font-bold text-white">{money(result.averagePrice)}</div>

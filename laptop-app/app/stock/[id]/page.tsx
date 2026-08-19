@@ -84,7 +84,7 @@ export default async function LaptopDetailPage({
             <h2 className="corp-heading text-lg">AI Price Estimates</h2>
             <Link
               href="/pricing"
-              className="font-display text-[11px] font-semibold tracking-[0.08em] text-corp-red uppercase hover:text-corp-red-bright"
+              className="font-display text-[11px] font-semibold tracking-[0.08em] text-corp-accent uppercase hover:text-corp-accent-bright"
             >
               Run another check →
             </Link>
@@ -143,7 +143,7 @@ export default async function LaptopDetailPage({
                 <div className="corp-label">Profit</div>
                 <div
                   className={`font-display text-[20px] font-bold ${
-                    (profit ?? 0) >= 0 ? "text-corp-red-bright" : "text-corp-red"
+                    (profit ?? 0) >= 0 ? "text-corp-pos" : "text-corp-neg"
                   }`}
                 >
                   {money(profit)}

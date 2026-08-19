@@ -103,7 +103,7 @@ export function LinkTile({
       <Brackets />
       <div className="flex items-center justify-between gap-3">
         <span className="corp-label">{label}</span>
-        {icon && <Icon name={icon} className="text-corp-red" />}
+        {icon && <Icon name={icon} className="text-corp-accent" />}
       </div>
       <GlitchText
         text={value}
@@ -125,6 +125,7 @@ export function StaticTile({
   sub,
   flag,
   hero,
+  sign,
   className = "",
 }: {
   label: string;
@@ -132,8 +133,16 @@ export function StaticTile({
   sub?: ReactNode;
   flag?: string;
   hero?: boolean;
+  /** Colour the figure by whether it's a gain or a loss. */
+  sign?: number;
   className?: string;
 }) {
+  const tone =
+    sign === undefined
+      ? "text-corp-accent-bright"
+      : sign >= 0
+        ? "text-corp-pos"
+        : "text-corp-neg";
   return (
     <div
       className={`corp-panel corp-panel-locked flex flex-col justify-between p-7 ${className}`}
@@ -142,7 +151,7 @@ export function StaticTile({
       <div className="flex items-center justify-between gap-3">
         <span className="corp-label">{label}</span>
         {flag && (
-          <span className="border border-corp-red-dim px-1.5 py-0.5 text-[8.5px] tracking-[0.08em] whitespace-nowrap text-corp-red uppercase">
+          <span className="border border-corp-accent-dim px-1.5 py-0.5 text-[8.5px] tracking-[0.08em] whitespace-nowrap text-corp-accent uppercase">
             {flag}
           </span>
         )}
@@ -150,7 +159,7 @@ export function StaticTile({
       <GlitchText
         text={value}
         speed={3}
-        className={`font-display font-bold leading-none text-corp-red-bright ${
+        className={`font-display font-bold leading-none ${tone} ${
           hero ? "text-[68px] font-extrabold tracking-tight" : "text-[27px]"
         }`}
       />

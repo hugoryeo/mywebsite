@@ -65,7 +65,7 @@ export default async function StockPage({
               <span className="corp-bracket corp-bracket-br" aria-hidden="true" />
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <Link href={`/stock/${l.id}`} className="min-w-[220px] flex-1 group">
-                  <div className="font-display text-[17px] font-bold text-white group-hover:text-corp-red-bright">
+                  <div className="font-display text-[17px] font-bold text-white group-hover:text-corp-accent-bright">
                     {displayTitle(l)}
                   </div>
                   <div className="mt-1 text-[12px] text-corp-400">{specSummary(l)}</div>

@@ -30,7 +30,7 @@ export default async function LaunchPage() {
   return (
     <div className="flex flex-col">
       <div className="mb-3.5 flex items-center gap-2">
-        <span className="h-[7px] w-[7px] rounded-full bg-corp-red shadow-[0_0_8px_var(--color-corp-red)] [animation:corp-pulse_2.4s_ease-in-out_infinite]" />
+        <span className="h-[7px] w-[7px] rounded-full bg-corp-accent shadow-[0_0_8px_var(--color-corp-accent)] [animation:corp-pulse_2.4s_ease-in-out_infinite]" />
         <span className="text-[10.5px] tracking-[0.12em] text-corp-500 uppercase">
           Uplink Stable — Clearance Level 2
         </span>
@@ -50,6 +50,7 @@ export default async function LaunchPage() {
         <StaticTile
           label="Total Profit"
           value={money(totalProfit)}
+          sign={totalProfit}
           flag="No Access"
           hero
           sub={`${sold.length} laptop${sold.length === 1 ? "" : "s"} sold · lifetime margin across all closed sales`}
@@ -93,7 +94,7 @@ export default async function LaunchPage() {
           <div className="flex min-w-[240px] flex-col gap-2">
             <div className="flex items-center justify-between gap-3">
               <span className="corp-label">Analytics</span>
-              <Icon name="chart" className="text-corp-red" />
+              <Icon name="chart" className="text-corp-accent" />
             </div>
             <GlitchText
               text={topSeller ? topSeller[0] : "No sales yet"}
@@ -106,9 +107,11 @@ export default async function LaunchPage() {
                 : "sell something to see trends"}
             </div>
           </div>
-          <div className="relative flex h-16 flex-1 items-center justify-center border-b border-l border-dashed border-corp-red/35 border-l-corp-red/20 after:absolute after:inset-x-0 after:-bottom-1 after:h-[7px] after:bg-[repeating-linear-gradient(90deg,rgba(226,35,26,0.3)_0_1px,transparent_1px_44px)]">
+          <div className="relative flex h-16 flex-1 items-center justify-center border-b border-l border-dashed border-corp-accent/35 border-l-corp-accent/20 after:absolute after:inset-x-0 after:-bottom-1 after:h-[7px] after:bg-[repeating-linear-gradient(90deg,rgba(111,141,179,0.35)_0_1px,transparent_1px_44px)]">
             <span className="text-[10px] tracking-[0.16em] text-corp-600 uppercase">
-              {sold.length ? `${sold.length} closed sales on record` : "Awaiting sales data"}
+              {sold.length
+                ? `${sold.length} closed sale${sold.length === 1 ? "" : "s"} on record`
+                : "Awaiting sales data"}
             </span>
           </div>
         </a>

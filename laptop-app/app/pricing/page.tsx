@@ -25,15 +25,15 @@ export default async function PricingPage() {
         <p className="mt-2 max-w-[68ch] text-[13px] leading-relaxed text-corp-400">
           An AI agent searches the web for eBay sold listings matching each laptop&rsquo;s specs and
           condition, and returns an average price. Only laptops marked{" "}
-          <strong className="text-corp-red">Prepared</strong> show up here.
+          <strong className="text-corp-accent">Prepared</strong> show up here.
         </p>
       </div>
 
       {!apiKey && (
-        <div className="corp-panel border-corp-red/50 p-4 text-[13px] text-corp-300">
+        <div className="corp-panel border-corp-accent/50 p-4 text-[13px] text-corp-300">
           <span className="corp-bracket corp-bracket-tl" aria-hidden="true" />
           No Anthropic API key configured yet.{" "}
-          <Link href="/settings" className="font-semibold text-corp-red underline hover:text-corp-red-bright">
+          <Link href="/settings" className="font-semibold text-corp-accent underline hover:text-corp-accent-bright">
             Add one in Settings
           </Link>{" "}
           to enable AI price checks.
@@ -57,7 +57,7 @@ export default async function PricingPage() {
                   <div>
                     <Link
                       href={`/stock/${l.id}`}
-                      className="font-display text-[17px] font-bold text-white hover:text-corp-red-bright"
+                      className="font-display text-[17px] font-bold text-white hover:text-corp-accent-bright"
                     >
                       {displayTitle(l)}
                     </Link>
