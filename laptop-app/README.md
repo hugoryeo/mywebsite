@@ -16,10 +16,14 @@ Requires **Node 22 LTS**. Node 24 has no prebuilt `better-sqlite3` binary, so
 `npm install` tries to compile it and fails looking for Python.
 
 ```bash
-npm install              # also generates the Prisma client
-npx prisma migrate dev   # creates dev.db and applies the schema
+npm install
 npm run dev
 ```
+
+`npm run dev` generates the Prisma client and applies any pending migrations
+before starting, so there is no separate setup step — `dev.db` is created on
+first run. Use `npx prisma migrate dev` only when you change the schema and
+need a new migration authored.
 
 Open [http://localhost:3000](http://localhost:3000).
 
