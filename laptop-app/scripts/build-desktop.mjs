@@ -54,6 +54,14 @@ function step(message) {
 }
 
 async function assemble() {
+  // `next dev` writes per-route type validators into .next/dev/types, and a
+  // production build type-checks them. They are not regenerated from scratch
+  // here, so a route deleted since the last `npm run dev` leaves a validator
+  // importing a file that no longer exists and the build fails on someone
+  // else's machine with an error about a page they never had. Dev-server
+  // state has no business in a release build; drop it.
+  fs.rmSync(path.join(appDir, ".next", "dev"), { recursive: true, force: true });
+
   step("Building the Next.js server");
   await run("npx", ["next", "build"]);
 
