@@ -82,14 +82,26 @@ export async function createLaptop(formData: FormData): Promise<void> {
     ...specData(formData, brandOs),
   };
 
-  // Reference codes are random, so a collision is possible in principle. The
-  // unique index is what actually guarantees it — retry on the constraint
-  // rather than checking first, which would leave a race between the check
-  // and the insert.
-  let laptop = null;
-  for (let attempt = 0; attempt < 5 && !laptop; attempt++) {
+  const laptop = await createWithFreshRefCode(data);
+
+  revalidateEverywhere(laptop.id);
+  redirect("/stock");
+}
+
+/**
+ * Inserts a laptop under a newly generated reference code.
+ *
+ * Reference codes are random, so a collision is possible in principle. The
+ * unique index is what actually guarantees uniqueness — retry on the
+ * constraint rather than checking first, which would leave a race between the
+ * check and the insert.
+ */
+async function createWithFreshRefCode(
+  data: Omit<Prisma.LaptopUncheckedCreateInput, "refCode">
+) {
+  for (let attempt = 0; attempt < 5; attempt++) {
     try {
-      laptop = await prisma.laptop.create({
+      return await prisma.laptop.create({
         data: { ...data, refCode: generateRefCode() },
       });
     } catch (err) {
@@ -98,12 +110,55 @@ export async function createLaptop(formData: FormData): Promise<void> {
       if (!isDuplicateRefCode) throw err;
     }
   }
-  if (!laptop) {
-    throw new Error("Could not allocate a unique reference code. Please try again.");
-  }
+  throw new Error("Could not allocate a unique reference code. Please try again.");
+}
 
-  revalidateEverywhere(laptop.id);
-  redirect("/stock");
+/**
+ * Copies a laptop's specs onto a new record with its own reference code, and
+ * opens it for editing.
+ *
+ * This is for the case the shop actually hits: several of the same machine
+ * bought together. Everything that describes the *model* carries over;
+ * everything that describes the *individual unit* does not, because a
+ * duplicate is a different physical laptop.
+ */
+export async function duplicateLaptop(id: string): Promise<void> {
+  const source = await prisma.laptop.findUnique({ where: { id } });
+  if (!source) throw new Error("Laptop not found");
+
+  const {
+    // Prisma assigns these.
+    id: _id,
+    createdAt: _createdAt,
+    updatedAt: _updatedAt,
+    // The whole point: the copy is its own laptop, so it gets its own code.
+    refCode: _refCode,
+    // Identifies one physical machine. Two records sharing a serial would be
+    // straightforwardly false.
+    serialNumber: _serialNumber,
+    // Measured per unit, and the cycle count is printed verbatim into the
+    // listing description — carrying one over would publish a wrong spec.
+    cycleCount: _cycleCount,
+    batteryHealth: _batteryHealth,
+    // A copy is unsold stock that hasn't been through prep yet.
+    statusReset: _statusReset,
+    statusCleaned: _statusCleaned,
+    statusPrepared: _statusPrepared,
+    statusListed: _statusListed,
+    sold: _sold,
+    soldPrice: _soldPrice,
+    shipping: _shipping,
+    fees: _fees,
+    soldAt: _soldAt,
+    // Spread rather than list the rest, so a spec field added to the schema
+    // later is carried over without anyone having to remember to add it here.
+    ...specs
+  } = source;
+
+  const copy = await createWithFreshRefCode(specs);
+
+  revalidateEverywhere(copy.id);
+  redirect(`/stock/${copy.id}`);
 }
 
 export async function updateLaptop(id: string, formData: FormData): Promise<void> {

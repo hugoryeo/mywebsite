@@ -5,6 +5,8 @@ import StatusChecklist from "@/app/components/StatusChecklist";
 import GlitchText from "@/app/components/GlitchText";
 import { Panel } from "@/app/components/Tile";
 import RefCode from "@/app/components/RefCode";
+import DuplicateButton from "@/app/components/DuplicateButton";
+import { duplicateLaptop } from "@/app/lib/actions";
 
 export const dynamic = "force-dynamic";
 
@@ -81,11 +83,15 @@ export default async function StockPage({
                   </div>
                 </div>
               </div>
-              {!showSold && (
-                <div className="mt-4 border-t border-[color:var(--corp-edge-soft)] pt-4">
-                  <StatusChecklist laptop={l} compact />
-                </div>
-              )}
+              <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-[color:var(--corp-edge-soft)] pt-4">
+                {!showSold && <StatusChecklist laptop={l} compact />}
+                {/* Duplicating a sold laptop is the common case, not an edge
+                    one — you sold one of a batch and still have the rest — so
+                    this sits outside the in-stock-only checklist. */}
+                <form action={duplicateLaptop.bind(null, l.id)} className="ml-auto">
+                  <DuplicateButton />
+                </form>
+              </div>
             </div>
           ))}
         </div>
