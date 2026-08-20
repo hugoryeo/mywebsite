@@ -23,7 +23,7 @@ const plexMono = IBM_Plex_Mono({
 
 export const metadata: Metadata = {
   title: "Laptop Sales Tracker",
-  description: "Track laptop inventory, prep status, eBay listings, and pricing.",
+  description: "Track laptop inventory, prep status, listing copy, and pricing.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

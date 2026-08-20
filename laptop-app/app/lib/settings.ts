@@ -2,12 +2,6 @@ import { prisma } from "./prisma";
 
 export const SETTING_KEYS = {
   anthropicApiKey: "anthropic_api_key",
-  ebayAppId: "ebay_app_id",
-  ebayCertId: "ebay_cert_id",
-  ebayDevId: "ebay_dev_id",
-  ebayRuName: "ebay_ru_name",
-  ebayEnvironment: "ebay_environment", // "sandbox" | "production"
-  ebayOAuthToken: "ebay_oauth_token", // JSON: { accessToken, refreshToken, expiresAt }
 } as const;
 
 export type SettingKey = (typeof SETTING_KEYS)[keyof typeof SETTING_KEYS];
@@ -35,32 +29,8 @@ export async function setSetting(key: SettingKey, value: string): Promise<void> 
   });
 }
 
-export async function deleteSetting(key: SettingKey): Promise<void> {
-  await prisma.setting.deleteMany({ where: { key } });
-}
 
-export interface EbayOAuthToken {
-  accessToken: string;
-  refreshToken: string;
-  /** epoch ms */
-  expiresAt: number;
-}
-
-export async function getEbayToken(): Promise<EbayOAuthToken | null> {
-  const raw = await getSetting(SETTING_KEYS.ebayOAuthToken);
-  if (!raw) return null;
-  try {
-    return JSON.parse(raw) as EbayOAuthToken;
-  } catch {
-    return null;
-  }
-}
-
-export async function setEbayToken(token: EbayOAuthToken): Promise<void> {
-  await setSetting(SETTING_KEYS.ebayOAuthToken, JSON.stringify(token));
-}
-
-/** Masks a secret for display, e.g. "sk-ant-...wXyz". */
+/** Renders a stored credential for display without revealing it. */
 export function maskSecret(value: string | null): string {
   if (!value) return "";
   if (value.length <= 8) return "••••••••";

@@ -8,7 +8,6 @@ const LINKS = [
   { href: "/", label: "Launch" },
   { href: "/stock", label: "Stock" },
   { href: "/pricing", label: "Pricing" },
-  { href: "/ebay", label: "eBay Listings" },
   { href: "/analytics", label: "Analytics" },
   { href: "/settings", label: "Settings" },
 ];
