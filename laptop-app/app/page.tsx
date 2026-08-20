@@ -42,7 +42,7 @@ export default async function LaunchPage() {
         className="corp-heading mb-3 text-[44px] leading-none"
       />
       <p className="mb-9 max-w-[62ch] text-[13px] leading-relaxed text-corp-400">
-        A general view of your laptop business — stock, pricing, listings, and what sells.
+        A general view of your laptop business — stock, pricing, and what sells.
       </p>
 
       {/* Bento: Profit anchors 2x2, Analytics runs the full width */}
@@ -74,15 +74,7 @@ export default async function LaunchPage() {
           sub="ready for AI price check"
           icon="tag"
           sig="b"
-        />
-
-        <LinkTile
-          href="/ebay"
-          label="eBay Listings"
-          value="Menu"
-          sub="live listings"
-          icon="cart"
-          sig="c"
+          className="sm:col-span-2"
         />
 
         <a

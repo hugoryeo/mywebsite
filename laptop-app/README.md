@@ -1,6 +1,6 @@
 # Laptop Sales Tracker
 
-A Next.js app for tracking laptop inventory, prep status, eBay listings, and AI-assisted pricing. It runs in a browser, or as a desktop app via Electron.
+A Next.js app for tracking laptop inventory, prep status, listing copy, and AI-assisted pricing. It runs in a browser, or as a desktop app via Electron.
 
 ## Stack
 
@@ -8,7 +8,6 @@ A Next.js app for tracking laptop inventory, prep status, eBay listings, and AI-
 - **Prisma 7 + SQLite** (`better-sqlite3` driver adapter) for the database
 - **Tailwind CSS v4** for the "Megacorp" theme — greyish blue on black, corporate terminal
 - **Anthropic API** (Claude, with the web search tool) powers the Pricing page's AI agent
-- **eBay Trading API + OAuth** powers the eBay Listings page
 - **Electron + electron-builder** wrap the whole thing as a desktop app
 
 ## Getting started
@@ -82,10 +81,9 @@ still accepts.
 
 ### The port
 
-The server binds `127.0.0.1:41827`, and only walks upwards if that is taken. A
-fixed port is what lets eBay's OAuth redirect URI stay the same between
-launches; an ephemeral one would need re-registering every time. Nothing outside
-the machine can reach it.
+The server binds `127.0.0.1:41827`, and only walks upwards if that is taken.
+A fixed port rather than an ephemeral one keeps the address stable between
+launches. Nothing outside the machine can reach it.
 
 ### Native modules and ABI
 
@@ -114,7 +112,7 @@ it was rendered from; re-render at 1024px and overwrite the PNG to change it.
 
 ## Pages
 
-- **Launch** (`/`) — a bento grid: Profit is a static 2×2 anchor that leads nowhere, Stock is a wide tile, Pricing and eBay are small, and Analytics runs the full width. Every tile except Profit links to its page.
+- **Launch** (`/`) — a bento grid: Profit is a static 2×2 anchor that leads nowhere, Stock and Pricing are wide tiles, and Analytics runs the full width. Every tile except Profit links to its page.
 - **Stock** (`/stock`) — in-stock / sold laptop lists with a Reset → Cleaned → Prepared → Listed status checklist per laptop. Every laptop carries a short reference code (`LT-4F2A`) shown beside its name, which is what tells two otherwise-identical machines apart.
 - **Duplicate** — every row, sold ones included, has a Duplicate button for the case where you bought several of the same machine. The copy gets its own reference code and opens straight into its edit form. Specs, colour, charger, source, notes, condition and pricing carry over; serial number, cycle count and battery health do not, because they describe one physical laptop rather than the model — and the cycle count is printed verbatim into the listing description, so a stale one would publish a wrong spec. The copy starts unsold with no prep stages ticked.
 - **Stock → Add / Edit** — the spec form branches on Apple vs. Windows. With **Apple** selected, entering the model number (A-number) looks it up in `app/lib/appleModels.ts` and turns Processor, GPU cores, RAM, Storage, Colour and Charger Wattage into dropdowns limited to the configurations Apple shipped for that model — picking a different chip narrows the rest (an A2442 offers M1 Pro 8c/10c and M1 Max 10c; choosing M1 Max switches GPU cores to 24/32 and RAM to 32/64GB). An unrecognised A-number falls back to free-text fields. Windows gets Manufacturer + Resolution; both share Year/Cycle Count/Serial Number/Condition/Charger/Source/Notes/Pricing.
@@ -123,8 +121,7 @@ it was rendered from; re-render at 1024px and overwrite the PNG to change it.
   - Description: `A2442 MacBook Pro M1 Max w/ 96W Charger.` then `Cycle count: 112, Excellent condition`
 - **Pricing** (`/pricing`) — lists laptops in the "Prepared" stage; "Run AI Price Check" calls Claude with the web search tool to find comparable eBay sold listings and stores the result.
 - **Analytics** (`/analytics`) — revenue/profit, sell-through, and "what sells better" breakdowns by brand and processor.
-- **eBay Listings** (`/ebay`) — your live active eBay listings, once eBay is connected.
-- **Settings** (`/settings`) — Anthropic API key, and eBay App ID / Cert ID / Dev ID / RuName + environment.
+- **Settings** (`/settings`) — the Anthropic API key used by the pricing agent.
 
 ## Theme
 
@@ -151,15 +148,6 @@ Uniqueness is enforced by a unique index, and creation retries on a constraint v
 ## Configuring the AI pricing agent
 
 Add an Anthropic API key on the Settings page. No key = the Pricing page shows a "not configured" notice instead of a broken button.
-
-## Configuring eBay
-
-1. Create an app in the [eBay Developer Program](https://developer.ebay.com/) and note its **App ID (Client ID)** and **Cert ID (Client Secret)**.
-2. Register a redirect ("RuName") pointing at `<your-app-url>/api/ebay/callback`.
-3. Enter the App ID, Cert ID, optional Dev ID, and RuName on the Settings page, and pick Sandbox or Production.
-4. Go to the **eBay Listings** page and click **Connect eBay Account** to run the OAuth flow.
-
-The eBay integration (`app/lib/ebay.ts`) is written against eBay's documented OAuth and Trading API (`GetMyeBaySelling`) shapes but hasn't been exercised against a live eBay account — double check endpoints/scopes against eBay's current docs if something doesn't line up.
 
 ## Database
 

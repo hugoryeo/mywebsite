@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { prisma } from "./prisma";
 import { STATUS_STAGES, type StatusKey } from "./laptop";
-import { SETTING_KEYS, setSetting, deleteSetting } from "./settings";
+import { SETTING_KEYS, setSetting } from "./settings";
 import { Prisma, type BrandOs } from "@/app/generated/prisma/client";
 import { lookupAppleModel, normaliseModelNumber } from "./appleModels";
 import { generateRefCode } from "./refCode";
@@ -221,29 +221,10 @@ export async function deleteLaptop(id: string): Promise<void> {
 }
 
 export async function saveSettings(formData: FormData): Promise<void> {
-  const fields: [keyof typeof SETTING_KEYS, string][] = [
-    ["anthropicApiKey", "anthropicApiKey"],
-    ["ebayAppId", "ebayAppId"],
-    ["ebayCertId", "ebayCertId"],
-    ["ebayDevId", "ebayDevId"],
-    ["ebayRuName", "ebayRuName"],
-  ];
-  for (const [settingKey, fieldName] of fields) {
-    const value = str(formData, fieldName);
-    // Blank input = "leave unchanged" (fields display masked, not real values).
-    if (value !== null) await setSetting(SETTING_KEYS[settingKey], value);
-  }
-  const env = str(formData, "ebayEnvironment");
-  if (env === "sandbox" || env === "production") {
-    await setSetting(SETTING_KEYS.ebayEnvironment, env);
-  }
-  revalidatePath("/settings");
-  revalidatePath("/ebay");
-  revalidatePath("/pricing");
-}
+  const value = str(formData, "anthropicApiKey");
+  // Blank input = "leave unchanged" (the field displays masked, not the real value).
+  if (value !== null) await setSetting(SETTING_KEYS.anthropicApiKey, value);
 
-export async function disconnectEbay(): Promise<void> {
-  await deleteSetting(SETTING_KEYS.ebayOAuthToken);
   revalidatePath("/settings");
-  revalidatePath("/ebay");
+  revalidatePath("/pricing");
 }

@@ -111,7 +111,7 @@ model PriceEstimate {
   @@index([laptopId])
 }
 
-// Key/value store for API credentials (eBay, Anthropic) entered via Settings.
+// Key/value store for API credentials entered via Settings.
 // Small local app, single operator — values are stored as plain text.
 model Setting {
   key   String @id
