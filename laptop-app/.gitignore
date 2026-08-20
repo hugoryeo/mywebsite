@@ -17,9 +17,6 @@
 /.next/
 /out/
 
-# production
-/build
-
 # misc
 .DS_Store
 *.pem
@@ -46,3 +43,9 @@ next-env.d.ts
 # local SQLite database
 *.db
 *.db-journal
+*.db-shm
+*.db-wal
+
+# packaged desktop app (electron-builder output). /build is deliberately NOT
+# ignored: it holds the app icon electron-builder reads at packaging time.
+/dist-desktop/

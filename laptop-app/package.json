@@ -7,13 +7,17 @@
     "build": "prisma generate && next build",
     "start": "prisma migrate deploy && next start",
     "lint": "eslint",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "desktop:build": "node scripts/build-desktop.mjs",
+    "desktop": "electron electron/main.js",
+    "desktop:dev": "node scripts/desktop-dev.mjs",
+    "desktop:dist": "node scripts/build-desktop.mjs && electron-builder"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.117.1",
     "@prisma/adapter-better-sqlite3": "^7.9.1",
     "@prisma/client": "^7.9.1",
-    "better-sqlite3": "^13.0.3",
+    "better-sqlite3": "^12.6.0",
     "fast-xml-parser": "^5.11.0",
     "next": "16.3.1",
     "prisma": "^7.9.1",
@@ -22,13 +26,23 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@electron/rebuild": "^4.2.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "electron": "^33.4.11",
+    "electron-builder": "^25.1.8",
     "eslint": "^9",
     "eslint-config-next": "16.3.1",
     "tailwindcss": "^4",
     "typescript": "^5"
+  },
+  "main": "electron/main.js",
+  "description": "Desktop and web app for tracking laptop inventory, prep status, eBay listings, and AI-assisted pricing",
+  "author": "hugoryeo",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hugoryeo/mywebsite.git"
   }
 }
